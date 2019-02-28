@@ -1,5 +1,9 @@
 /*
+    SwitchChat Chatbox Module for SwitchCraft
 
+    Copyright (c) 2019 Alessandro "Ale32bit"
+
+    https://github.com/Ale32bit/SwitchChat
  */
 
 const EventEmitter = require("events").EventEmitter;
@@ -34,6 +38,10 @@ module.exports = class Client extends EventEmitter {
         this.players = new Map();
         this.owner = null;
 
+        this.running = false;
+
+        this.queueInterval = null;
+
         this.messageQueue = [];
     }
 
@@ -53,14 +61,16 @@ module.exports = class Client extends EventEmitter {
                         this.guest = data.guest;
                         this.owner = data.licenceOwner;
 
-                        setInterval(() => {
+                        this.queueInterval = setInterval(() => {
                             if (this.messageQueue.length > 0) {
                                 this.ws.send(this.messageQueue.shift());
                             }
                         }, 350);
 
+                        this.running = true;
                         return resolve();
                     } else {
+                        this.running = false;
                         return reject(data.reason);
                     }
                 } else if (data.type === "players") {
@@ -68,28 +78,42 @@ module.exports = class Client extends EventEmitter {
                     for (let i = 0; i < data.players.length; i++) {
                         this.players.set(data.players[i].uuid, new Player(this, data.players[i]))
                     }
+                    this.emit("players", this.players);
                 } else if (data.type === "message") {
                     if (data.channel === "chat") {
-                        this.emit("chat_message", new ChatMessage(this, data));
+                        this.emit("chat", new ChatMessage(this, data));
                     } else if (data.channel === "discord") {
-                        this.emit("discord_message", new DiscordMessage(this, data))
+                        this.emit("discord", new DiscordMessage(this, data))
                     }
                 } else if (data.type === "command") {
                     this.emit("command", new Command(this, data))
                 } else if (data.type === "event") {
                     if (data.event === "join") {
-                        this.emit("player_join", new Player(this, data.user))
+                        this.emit("join", new Player(this, data.user))
                     } else if (data.event === "leave") {
-                        this.emit("player_leave", new Player(this, data.user))
+                        this.emit("leave", new Player(this, data.user))
                     } else if (data.event === "death") {
-                        this.emit("player_death", new Death(this, data));
+                        this.emit("death", new Death(this, data));
                     } else if (data.event === "afk") {
-                        this.emit("player_afk", new Player(this, data.user))
+                        this.emit("afk", new Player(this, data.user))
                     } else if (data.event === "afk_return") {
-                        this.emit("player_afkReturn", new Player(this, data.user))
+                        this.emit("afk_return", new Player(this, data.user))
                     }
+                } else if (data.type === "closing") {
+                    this.emit("closing", {
+                        reason: data.reason,
+                        closeReason: data.closeReason,
+                    })
+                }
+            });
+
+            ws.on("close", ()=>{
+                if(this.running){
+                    clearInterval(this.queueInterval);
+                    return resolve(setTimeout(this.connect), 3000);
                 }
             })
+
         });
     }
 

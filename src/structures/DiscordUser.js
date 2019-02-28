@@ -1,3 +1,11 @@
+/*
+    SwitchChat Chatbox Module for SwitchCraft
+
+    Copyright (c) 2019 Alessandro "Ale32bit"
+
+    https://github.com/Ale32bit/SwitchChat
+ */
+
 module.exports = class DiscordUser {
     constructor(client, user = {}) {
         this.client = client;

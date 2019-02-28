@@ -1,3 +1,11 @@
+/*
+    SwitchChat Chatbox Module for SwitchCraft
+
+    Copyright (c) 2019 Alessandro "Ale32bit"
+
+    https://github.com/Ale32bit/SwitchChat
+ */
+
 module.exports = {
     Client: require("./src/Client"),
     ChatMessage: require("./src/structures/ChatMessage"),

@@ -13,6 +13,7 @@ module.exports = {
     Death: require("./src/structures/Death"),
     DiscordMessage: require("./src/structures/DiscordMessage"),
     DiscordUser: require("./src/structures/DiscordUser"),
+    DiscordRole: require("./src/structures/DiscordRole"),
     Player: require("./src/structures/Player"),
     utils: require("./src/utils"),
 };

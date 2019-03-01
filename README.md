@@ -96,3 +96,9 @@ Events return these classes:
 * rawText - tellraw equivalent
 * user - Class DiscordUser
 * edited - If the message has been edited. (boolean)
+
+#### DiscordRole
+* id - Snowflake of the role
+* name - Role name
+* color - Color of the role
+* colour - Colour of the role

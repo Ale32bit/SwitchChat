@@ -24,7 +24,7 @@ module.exports = class Player {
      * Tell a message to a player
      * @param {string} message Content of the message
      * @param {string} [label] Label of the message
-     * @param {string} [mode] Mode prefered to display the message. "markdown" and "format"
+     * @param {string} [mode] Mode preferred to display the message. "markdown" and "format"
      * @example
      * player.tell("Hello, world!", "SteveBot", "markdown")
      */

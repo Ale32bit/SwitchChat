@@ -110,7 +110,11 @@ module.exports = class Client extends EventEmitter {
             ws.on("close", ()=>{
                 if(this.running){
                     clearInterval(this.queueInterval);
-                    return resolve(setTimeout(this.connect), 3000);
+                    let reconnect = () => {
+                        this.emit("reconnect");
+                        return resolve(this.connect());
+                    };
+                    setTimeout(reconnect, 3000)
                 }
             })
 
@@ -134,7 +138,7 @@ module.exports = class Client extends EventEmitter {
      * Say a message to all players
      * @param {string} message Content of the message
      * @param {string} [label] Label of the message
-     * @param {string} [mode] Mode prefered to display the message. "markdown" and "format"
+     * @param {string} [mode] Mode preferred to display the message. "markdown" and "format"
      * @example
      * client.say("Hello, world!", "SteveBot", "markdown")
      */
@@ -148,6 +152,29 @@ module.exports = class Client extends EventEmitter {
             }))
         } else {
             throw "Missing 'say' capability";
+        }
+    }
+
+    /**
+     * Tell a message to a player
+     * @param {String} player Recipient
+     * @param {String} message Content of the message
+     * @param {string} [label] Label of the message
+     * @param {string} [mode] Mode preferred to display the message. "markdown" and "format"
+     * @example
+     * client.tell("Steve", "Hello, Steve!", "Herobrine", "format")
+     */
+    async tell(player, message, label, mode = "markdown") {
+        if (this.hasCapability("tell")) {
+            this._addMessage(JSON.stringify({
+                type: "tell",
+                user: player.toString(),
+                text: message,
+                name: label,
+                mode: mode || "markdown",
+            }))
+        } else {
+            throw "Missing 'tell' capability";
         }
     }
 };

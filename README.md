@@ -1,13 +1,15 @@
 # SwitchChat
 ### SwitchCraft ChatBox Module for Node.js
 
+[![npm version](https://badge.fury.io/js/switchchat.svg)](https://www.npmjs.org/package/switchchat)
+
 ## Installation
 
 ```
 npm i --save switchchat
 ```
 
-# Usage
+## Usage
 ```js
 // Require module
 const SwitchChat = require( "switchchat" );
@@ -32,11 +34,17 @@ client.on("chat", function(message){
 // Say a message to all players
 client.say("Hello, world", "ChatBot");
 
+// Tell a message to a player
+client.tell("Steve", "Hello, Steve", "Herobrine");
+
+// Get boolean of the capability
+client.hasCapability( "say" );
+
 // Get list of online players (Map)
 console.log( client.players );
 ```
 
-# Events
+## Events
 These events are fired on client. You can listen to them with `client.on( event, callback )`
 * chat - Get messages from in-game chat. Returns ChatMessage
 * discord - Get messages from Discord chat. Returns DiscordMessage
@@ -48,8 +56,9 @@ These events are fired on client. You can listen to them with `client.on( event,
 * afk - Get player that went away from keyboard. Returns Player
 * afk_return - Get player that came back from AFK. Returns Player
 * closing - The server is closing and the client will try to reconnect. Returns Object `{reason, closeReason}`
+* reconnect - Fired when the WebSocket connection is being reestablished
 
-# Classes
+## Classes
 Events return these classes:
 
 #### Player
@@ -102,3 +111,21 @@ Events return these classes:
 * name - Role name
 * color - Color of the role
 * colour - Colour of the role
+
+## Client Variables
+* endpoint - URL of the WebSocket connection
+* license - License provided by the user
+* owner - Owner of the license
+* guest - Boolean if guest license
+* capabilities - Array of the capabilities the license has
+* players - Map of all online players
+* running - Boolean of the status
+* queueInterval - Internal queue interval for `say` and `tell` functions
+* messageQueue - Internal array for the queue interval
+* ws - WebSocket connection
+
+### Capabilities
+* `say` - Say a message to all player
+* `tell` - Tell a player a message
+* `command` - Can listen to commands `\\`
+* `read` - Can read chat and Discord messages

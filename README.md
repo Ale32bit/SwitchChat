@@ -129,3 +129,7 @@ Events return these classes:
 * `tell` - Tell a player a message
 * `command` - Can listen to commands `\\`
 * `read` - Can read chat and Discord messages
+
+### Say/tell modes
+* `markdown` - Use Markdown formatting for texts
+* `format` - Use normal Minecraft formatting with color/style codes

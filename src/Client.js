@@ -116,6 +116,10 @@ module.exports = class Client extends EventEmitter {
                     };
                     setTimeout(reconnect, 3000)
                 }
+            });
+
+            ws.on("error", function (e) {
+                this.emit("ws_error", e);
             })
 
         });

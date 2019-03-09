@@ -38,6 +38,13 @@ module.exports = class Client extends EventEmitter {
         this.players = new Map();
         this.owner = null;
 
+        this.CAPABILITIES = {
+            SAY: "say",
+            TELL: "tell",
+            READ: "read",
+            COMMAND: "command"
+        };
+
         this.running = false;
 
         this.queueInterval = null;
@@ -184,12 +191,5 @@ module.exports = class Client extends EventEmitter {
         } else {
             throw "Missing 'tell' capability";
         }
-    }
-
-    static CAPABILITIES = {
-        SAY: "say",
-        TELL: "tell",
-        READ: "read",
-        COMMAND: "command"
     }
 };

@@ -55,8 +55,11 @@ These events are fired on client. You can listen to them with `client.on( event,
 * death - Get player that just died. Returns Death
 * afk - Get player that went away from keyboard. Returns Player
 * afk_return - Get player that came back from AFK. Returns Player
+* login - Fired when successfully authenticated.
 * closing - The server is closing and the client will try to reconnect. Returns Object `{reason, closeReason}`
-* reconnect - Fired when the WebSocket connection is being reestablished
+* reconnect - Fired when the WebSocket connection is being reestablished.
+* ws_error - Fired when the WebSocket connection errored. Returns error
+* ws_message - Get raw JSON messages from the WebSocket connection. Returns Object
 
 ## Classes
 Events return these classes:

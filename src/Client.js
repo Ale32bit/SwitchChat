@@ -55,6 +55,7 @@ module.exports = class Client extends EventEmitter {
             let ws = this.ws;
             ws.on("message", data => {
                 data = JSON.parse(data);
+                this.emit("ws_message", data);
                 if (data.type === "hello") {
                     if (data.ok) {
                         this.capabilities = data.capabilities;
@@ -68,6 +69,9 @@ module.exports = class Client extends EventEmitter {
                         }, 350);
 
                         this.running = true;
+
+                        this.emit("login");
+
                         return resolve();
                     } else {
                         this.running = false;
@@ -180,5 +184,12 @@ module.exports = class Client extends EventEmitter {
         } else {
             throw "Missing 'tell' capability";
         }
+    }
+
+    static CAPABILITIES = {
+        SAY: "say",
+        TELL: "tell",
+        READ: "read",
+        COMMAND: "command"
     }
 };

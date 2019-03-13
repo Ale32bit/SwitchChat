@@ -15,7 +15,7 @@ npm i --save switchchat
 const SwitchChat = require( "switchchat" );
 
 // Create new client
-const client = new SwitchChat.Client( "your licence" );
+const client = new SwitchChat.Client( "your licence" ); // new Client(license key, options) 
 
 // Connect to endpoint (returns promise)
 client.connect()
@@ -40,6 +40,12 @@ client.tell("Steve", "Hello, Steve", "Herobrine");
 // Get boolean of the capability
 client.hasCapability( "say" );
 
+// Destroy client connection
+client.destroy();
+
+// Restart client connection
+client.reconnect();
+
 // Get list of online players (Map)
 console.log( client.players );
 ```
@@ -57,6 +63,7 @@ These events are fired on client. You can listen to them with `client.on( event,
 * afk_return - Get player that came back from AFK. Returns Player
 * login - Fired when successfully authenticated.
 * closing - The server is closing and the client will try to reconnect. Returns Object `{reason, closeReason}`
+* _error - Fired when the server sends an error. (Appended with _ because it would end the process otherwise)
 * reconnect - Fired when the WebSocket connection is being reestablished.
 * ws_error - Fired when the WebSocket connection errored. Returns error
 * ws_message - Get raw JSON messages from the WebSocket connection. Returns Object
@@ -126,6 +133,11 @@ Events return these classes:
 * queueInterval - Internal queue interval for `say` and `tell` functions
 * messageQueue - Internal array for the queue interval
 * ws - WebSocket connection
+* options - Options of the client set by the user
+
+### Options
+* queueInterval - Interval of messages queue. Default 350 (in ms)
+* restartOnTellError - Restart connection if bugged. Default true
 
 ### Capabilities
 * `say` - Say a message to all player

@@ -23,11 +23,16 @@ const utils = require("./utils");
 module.exports = class Client extends EventEmitter {
     /**
      * @param {String} [licenseKey] Licence key for authentication
+     * @param {Object} [options] Options
      * @example
      * new SwitchChat.Client('licence key')
      */
-    constructor(licenseKey = "guest") {
+    constructor(licenseKey = "guest", options = {}) {
         super();
+
+        this.options = {};
+        this.options.queueInterval = options.queueInterval || 350; // 350 milliseconds
+        this.options.restartOnTellError = options.restartOnTellError || true;
 
         /**
          * URL of the WebSocket server
@@ -46,6 +51,7 @@ module.exports = class Client extends EventEmitter {
         };
 
         this.running = false;
+        this.immediateRestart = false;
 
         this.queueInterval = null;
 
@@ -73,9 +79,19 @@ module.exports = class Client extends EventEmitter {
                             if (this.messageQueue.length > 0) {
                                 this.ws.send(this.messageQueue.shift());
                             }
-                        }, 350);
+                        }, this.options.queueInterval);
 
                         this.running = true;
+
+                        if (this.options.restartOnTellError) {
+                            if (this.hasCapability("tell")) {
+                                this._addMessage(JSON.stringify({
+                                    type: "tell",
+                                    user: "SC_TELL_CHECK_" + (Math.random().toString(36)),
+                                    text: "Powered by SwitchChat by Ale32bit",
+                                }))
+                            }
+                        }
 
                         this.emit("login");
 
@@ -110,6 +126,18 @@ module.exports = class Client extends EventEmitter {
                     } else if (data.event === "afk_return") {
                         this.emit("afk_return", new Player(this, data.user))
                     }
+                } else if (data.type === "error") {
+                    this.emit("_error", {
+                        error: data.error,
+                        message: data.message,
+                        ok: data.ok,
+                    });
+                    if (this.options.restartOnTellError) {
+                        if (data.error === "unknownError") {
+                            this.immediateRestart = true;
+                            this.ws.close();
+                        }
+                    }
                 } else if (data.type === "closing") {
                     this.emit("closing", {
                         reason: data.reason,
@@ -118,14 +146,19 @@ module.exports = class Client extends EventEmitter {
                 }
             });
 
-            ws.on("close", ()=>{
-                if(this.running){
+            ws.on("close", () => {
+                if (this.running) {
                     clearInterval(this.queueInterval);
                     let reconnect = () => {
                         this.emit("reconnect");
                         return resolve(this.connect());
                     };
-                    setTimeout(reconnect, 3000)
+                    if (this.immediateRestart) {
+                        this.immediateRestart = false;
+                        setImmediate(reconnect);
+                    } else {
+                        setTimeout(reconnect, 3000)
+                    }
                 }
             });
 
@@ -134,6 +167,25 @@ module.exports = class Client extends EventEmitter {
             })
 
         });
+    }
+
+    /**
+     * Destroy WebSocket connection and don't connect anymore
+     */
+    destroy() {
+        if (this.running) {
+            this.running = false;
+            this.ws.close();
+        }
+    }
+
+    /**
+     * Close and restart WebSocket connection
+     */
+    reconnect() {
+        if (this.running) {
+            this.ws.close();
+        }
     }
 
     /**

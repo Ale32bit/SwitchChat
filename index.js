@@ -15,5 +15,10 @@ module.exports = {
     DiscordUser: require("./src/structures/DiscordUser"),
     DiscordRole: require("./src/structures/DiscordRole"),
     Player: require("./src/structures/Player"),
+
+    Bot: require("./src/Bot"),
+    BotPlugin: require("./src/structures/BotPlugin"),
+    BotCommand: require("./src/structures/BotCommand"),
+
     utils: require("./src/utils"),
 };

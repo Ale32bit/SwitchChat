@@ -4,15 +4,20 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports = class Bot extends Client {
+    /**
+     * @param {String} [license] Licence key for authentication
+     * @param {Object} [options] Options
+     * @example
+     * new SwitchChat.Bot('licence key')
+     */
     constructor(license, options = {}) {
-        super(license);
+        super(license, options);
 
         console.warn("Experimental SwitchChat Modular Bot Engine");
 
         let baseDir = path.dirname(module.parent.filename);
         this.plugins = new Map();
 
-        this.options = {};
         this.options.command = options.command || "bot";
         this.options.pluginsPath = options.pluginsPath || path.resolve(baseDir, "sc_plugins");
         this.options.configPath = options.configPath || path.resolve(baseDir, "sc_configs");
@@ -78,16 +83,60 @@ module.exports = class Bot extends Client {
         })
     }
 
+    /**
+     * Get command from name
+     * @param {String} commandName Command name
+     * @returns {Promise<Object>}
+     */
     getCommand(commandName) {
-        return new Promise((resolve) => {
-            this.plugins.forEach((v) => {
-                for (let cmdName in v.commands) {
-                    if (cmdName === commandName) {
-                        return resolve(v.commands[cmdName]);
+        return new Promise(async (resolve) => {
+            let mtc = commandName.match(/^\w+:/);
+            let id;
+            if (mtc) id = mtc[0].substring(0, mtc[0].length - 1);
+            if (id) {
+                let cmdm = commandName.match(/:\w+/);
+                let cmd = cmdm[0].substring(1);
+                let plugin = await this.getPluginByCommandId(id);
+                if (plugin) return resolve(plugin.commands[cmd]);
+            } else {
+                this.plugins.forEach((v) => {
+                    for (let cmdName in v.commands) {
+                        if (cmdName === commandName) {
+                            return resolve(v.commands[cmdName]);
+                        }
                     }
+                });
+                return resolve();
+            }
+        });
+    }
+
+    /**
+     * Check existence of a command
+     * @param {String} commandName Command name
+     * @returns {Promise<boolean>}
+     */
+    async hasCommand(commandName) {
+        this.plugins.forEach((v) => {
+            for (let cmdName in v.commands) {
+                if (cmdName === commandName) {
+                    return true;
                 }
+            }
+        });
+        return false;
+    }
+
+    /**
+     * Get a plugin by its command ID
+     * @param {String} commandId Command ID
+     * @returns {Promise<Plugin>}
+     */
+    getPluginByCommandId(commandId) {
+        return new Promise(resolve => {
+            this.plugins.forEach((v) => {
+                if (v.commandId === commandId) return resolve(v);
             });
-            return resolve();
         });
     }
 

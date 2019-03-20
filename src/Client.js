@@ -14,6 +14,8 @@ const DiscordMessage = require("./structures/DiscordMessage");
 const Death = require("./structures/Death");
 const Command = require("./structures/Command");
 const utils = require("./utils");
+const fs = require("fs");
+const path = require("path");
 
 /**
  * SwitchCraft Chatbox Client
@@ -33,6 +35,7 @@ module.exports = class Client extends EventEmitter {
         this.options = {};
         this.options.queueInterval = options.queueInterval || 350; // 350 milliseconds
         this.options.restartOnTellError = options.restartOnTellError || true;
+        this.options.playersCachePath = options.playersCachePath || path.resolve(path.dirname(module.parent.filename), "playersCache.json");
 
         /**
          * URL of the WebSocket server
@@ -56,7 +59,12 @@ module.exports = class Client extends EventEmitter {
         this.queueInterval = null;
 
         this.messageQueue = [];
+
+        if (!fs.existsSync(this.options.playersCachePath)) fs.writeFileSync(this.options.playersCachePath, "[]");
+
+        this.playerCache = new Map(require(this.options.playersCachePath));
     }
+
 
     /**
      * Connect to the server and authenticate the licence key
@@ -103,8 +111,17 @@ module.exports = class Client extends EventEmitter {
                 } else if (data.type === "players") {
                     this.players = new Map();
                     for (let i = 0; i < data.players.length; i++) {
-                        this.players.set(data.players[i].uuid, new Player(this, data.players[i]))
+                        this.players.set(data.players[i].uuid, new Player(this, data.players[i]));
+                        this.playerCache.set(data.players[i].uuid, {
+                            name: data.players[i].name,
+                            uuid: data.players[i].uuid,
+                            world: data.players[i].world,
+                            group: data.players[i].group,
+                            displayName: data.players[i].displayName,
+                            displayNameFormatted: data.displayNameFormatted,
+                        });
                     }
+                    fs.writeFileSync(this.options.playersCachePath, JSON.stringify([...this.playerCache]));
                     this.emit("players", this.players);
                 } else if (data.type === "message") {
                     if (data.channel === "chat") {
@@ -243,5 +260,15 @@ module.exports = class Client extends EventEmitter {
         } else {
             throw "Missing 'tell' capability";
         }
+    }
+
+    getPlayer(uuid) {
+        return new Promise((resolve, reject) => {
+            if (this.playerCache.has(uuid)) {
+                return resolve(new Player(this, this.playerCache.get(uuid)));
+            } else {
+                return reject("UUID not found");
+            }
+        });
     }
 };

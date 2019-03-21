@@ -40,6 +40,9 @@ client.tell("Steve", "Hello, Steve", "Herobrine");
 // Get boolean of the capability
 client.hasCapability( "say" );
 
+// Get player by its UUID
+client.getPlayer( "424ac92b-9b6a-47fd-b47d-2f6742fe615d" ); // Returns Ale32bit
+
 // Destroy client connection
 client.destroy();
 

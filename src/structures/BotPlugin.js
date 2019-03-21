@@ -1,4 +1,5 @@
 const {EventEmitter} = require("events");
+const path = require("path");
 
 let idRegex = /^[\w.\-]+$/i;
 let commandIdRegex = /[^.]+$/i;
@@ -11,7 +12,7 @@ let commandIdRegex = /[^.]+$/i;
 module.exports = class Plugin extends EventEmitter {
     /**
      * @param {Object} client Client
-     * @param {String} id
+     * @param {String} id Plugin full ID
      * @param {Object} [details]
      */
     constructor(client, id, details = {}) {
@@ -39,16 +40,38 @@ module.exports = class Plugin extends EventEmitter {
         }
     }
 
+    /**
+     * Get command
+     * @param {String} commandName Command name
+     * @returns {Object|undefined} Command
+     */
     getCommand(commandName) {
         return this.commands[commandName] || undefined
     }
 
+    /**
+     * Get all plugin commands
+     * @returns {Object} Commands
+     */
     get getCommands() {
         return this.commands;
     }
 
+    /**
+     * Check if plugin has a command
+     * @param {String} commandName Command name
+     * @returns {boolean}
+     */
     hasCommand(commandName) {
         return !!this.commands[commandName];
+    }
+
+    /**
+     * Get Plugin config path
+     * @returns {string} Plugin Config Path
+     */
+    get getConfigPath() {
+        return path.resolve(this.client.options.configPath, this.id);
     }
 
 };

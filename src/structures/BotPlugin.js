@@ -70,7 +70,7 @@ module.exports = class Plugin extends EventEmitter {
      * Get Plugin config path
      * @returns {string} Plugin Config Path
      */
-    get getConfigPath() {
+    get configPath() {
         return path.resolve(this.client.options.configPath, this.id);
     }
 

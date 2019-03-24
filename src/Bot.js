@@ -15,7 +15,7 @@ module.exports = class Bot extends Client {
 
         console.warn("Experimental SwitchChat Modular Bot Engine");
 
-        let baseDir = path.dirname(module.parent.filename);
+        let baseDir = path.dirname(module.parent.parent.filename); // 1st parent = switchchat/index.js; 2nd parent = user script
         this.plugins = new Map();
 
         this.options.command = options.command || "bot";

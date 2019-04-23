@@ -13,7 +13,7 @@ module.exports = class DiscordRole {
         this.name = data.name;
         this.id = data.id;
         this.color = data.colour;
-        this.colour = data.colour;
+        this.colour = data.colour; // For our british friends
     }
 
     toString() {

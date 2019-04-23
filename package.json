@@ -1,6 +1,6 @@
 {
   "name": "switchchat",
-  "version": "1.5.2",
+  "version": "1.6.2",
   "description": "Chatbox Module for SwitchCraft Server",
   "main": "index.js",
   "scripts": {

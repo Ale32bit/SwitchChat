@@ -34,7 +34,7 @@ module.exports = class Client extends EventEmitter {
 
         this.options = {};
         this.options.queueInterval = options.queueInterval || 350; // 350 milliseconds
-        this.options.restartOnTellError = options.restartOnTellError || true;
+        this.options.restartOnNullOwner = options.restartOnNullOwner || true;
         this.options.playersCachePath = options.playersCachePath || path.resolve(path.dirname(module.parent.filename), "playersCache.json");
 
         /**
@@ -44,6 +44,7 @@ module.exports = class Client extends EventEmitter {
         this.endpoint = "wss://chat.switchcraft.pw/";
         this.license = licenseKey;
         this.players = new Map();
+        this.capabilities = {};
         this.owner = null;
 
         this.CAPABILITIES = {
@@ -60,6 +61,9 @@ module.exports = class Client extends EventEmitter {
 
         this.messageQueue = [];
 
+        this.lastID = 0;
+        this.promises = {};
+
         if (!fs.existsSync(this.options.playersCachePath)) fs.writeFileSync(this.options.playersCachePath, "[]");
 
         this.playerCache = new Map(require(this.options.playersCachePath));
@@ -69,6 +73,7 @@ module.exports = class Client extends EventEmitter {
     /**
      * Connect to the server and authenticate the licence key
      * @returns {Promise}
+     * @fires Client#login
      */
     connect() {
         return new Promise((resolve, reject) => {
@@ -91,22 +96,32 @@ module.exports = class Client extends EventEmitter {
 
                         this.running = true;
 
-                        if (this.options.restartOnTellError) {
-                            if (this.hasCapability("tell")) {
-                                this._addMessage(JSON.stringify({
-                                    type: "tell",
-                                    user: "SC_TELL_CHECK_" + (Math.random().toString(36)),
-                                    text: "Powered by SwitchChat by Ale32bit",
-                                }))
+                        if (this.options.restartOnNullOwner) {
+                            if (!this.owner) {
+                                this.immediateRestart = true;
+                                this.reconnect();
                             }
                         }
 
+                        /**
+                         * Successful login
+                         *
+                         * @event Client#login
+                         */
                         this.emit("login");
 
                         return resolve();
                     } else {
                         this.running = false;
                         return reject(data.reason);
+                    }
+                } else if (data.type === "success") {
+                    if (this.promises[data.id]) {
+                        this.promises[data.id].resolve({
+                            id: data.id,
+                            reason: data.reason,
+                            ok: true,
+                        })
                     }
                 } else if (data.type === "players") {
                     this.players = new Map();
@@ -122,40 +137,117 @@ module.exports = class Client extends EventEmitter {
                         });
                     }
                     fs.writeFileSync(this.options.playersCachePath, JSON.stringify([...this.playerCache]));
+                    /**
+                     * Players list updated
+                     *
+                     * @event Client#players
+                     * @type {Map}
+                     */
                     this.emit("players", this.players);
                 } else if (data.type === "message") {
                     if (data.channel === "chat") {
+                        /**
+                         * Get chat message
+                         *
+                         * @event Client#chat
+                         * @param {ChatMessage} message The chat message
+                         */
                         this.emit("chat", new ChatMessage(this, data));
                     } else if (data.channel === "discord") {
+                        /**
+                         * Get Discord chat message
+                         *
+                         * @event Client#discord
+                         * @param {DiscordMessage} discordMessage The Discord chat message
+                         */
                         this.emit("discord", new DiscordMessage(this, data))
                     }
                 } else if (data.type === "command") {
+                    /**
+                     * Emitted when a player runs a ChatBox command
+                     *
+                     * @event Client#command
+                     * @param {Command} command The command parsed
+                     */
                     this.emit("command", new Command(this, data))
                 } else if (data.type === "event") {
                     if (data.event === "join") {
+                        /**
+                         * Emitted when a player joins the server
+                         *
+                         * @event Client#join
+                         * @param {Player} player The player that joined
+                         */
                         this.emit("join", new Player(this, data.user))
                     } else if (data.event === "leave") {
+                        /**
+                         * Emitted when a player leaves the server
+                         *
+                         * @event Client#leave
+                         * @param {Player} player The player that left
+                         */
                         this.emit("leave", new Player(this, data.user))
                     } else if (data.event === "death") {
+                        /**
+                         * Emitted when a player dies
+                         *
+                         * @event Client#death
+                         * @param {Player} player The player that died
+                         */
                         this.emit("death", new Death(this, data));
                     } else if (data.event === "afk") {
-                        this.emit("afk", new Player(this, data.user))
+                        /**
+                         * Emitted when a player has gone away from keyboard
+                         *
+                         * @event Client#afk
+                         * @param {Player} player The player went AFK
+                         */
+                        this.emit("afk", new Player(this, data.user));
                     } else if (data.event === "afk_return") {
+                        /**
+                         * Emitted when a player returns from AFK
+                         *
+                         * @event Client#afk_return
+                         * @param {Player} player The player that returned from AFK
+                         */
                         this.emit("afk_return", new Player(this, data.user))
                     }
                 } else if (data.type === "error") {
+                    /**
+                     * Emitted when the server returns an error from a request
+                     *
+                     * @event Client#_error
+                     * @type {object}
+                     * @property {string} error The error code
+                     * @property {string} message The error message
+                     * @property {boolean} ok Ok
+                     */
                     this.emit("_error", {
                         error: data.error,
                         message: data.message,
+                        id: data.id ? data.id : -1,
                         ok: data.ok,
                     });
-                    if (this.options.restartOnTellError) {
-                        if (data.error === "unknownError") {
-                            this.immediateRestart = true;
-                            this.ws.close();
+
+                    if (data.id) {
+                        if (this.promises[data.id]) {
+                            this.promises[data.id].reject({
+                                error: data.error,
+                                message: data.message,
+                                id: data.id,
+                                ok: data.ok,
+                            });
                         }
                     }
                 } else if (data.type === "closing") {
+                    /**
+                     * Emitted when the server is closing
+                     *
+                     * @event Client#closing
+                     * @type {object}
+                     * @property {string} reason Reason code
+                     * @property {string} closeReason Reason message
+                     */
                     this.emit("closing", {
                         reason: data.reason,
                         closeReason: data.closeReason,
@@ -167,19 +259,30 @@ module.exports = class Client extends EventEmitter {
                 if (this.running) {
                     clearInterval(this.queueInterval);
                     let reconnect = () => {
+                        /**
+                         * Emitted when the client is attempting to reconnect
+                         *
+                         * @event Client#reconnect
+                         */
                         this.emit("reconnect");
                         return resolve(this.connect());
                     };
                     if (this.immediateRestart) {
                         this.immediateRestart = false;
-                        setImmediate(reconnect);
+                        setTimeout(reconnect, 1000); // 1s to prevent *dos*
                     } else {
                         setTimeout(reconnect, 3000)
                     }
                 }
             });
 
-            ws.on("error", function (e) {
+            ws.on("error", (e) => {
+                /**
+                 * Emitted when the websocket fails
+                 *
+                 * @event Client#ws_error
+                 * @param {Error} e The error
+                 */
                 this.emit("ws_error", e);
             })
 
@@ -215,7 +318,13 @@ module.exports = class Client extends EventEmitter {
     }
 
     _addMessage(data) {
-        this.messageQueue.push(data);
+        this.lastID++;
+        data.id = this.lastID;
+        if (data.promise) {
+            this.promises[this.lastID] = data.promise;
+            delete data.promise;
+        }
+        this.messageQueue.push(JSON.stringify(data));
     }
 
     /**
@@ -226,17 +335,23 @@ module.exports = class Client extends EventEmitter {
      * @example
      * client.say("Hello, world!", "SteveBot", "markdown")
      */
-    async say(message, label, mode = "markdown") {
-        if (this.hasCapability("say")) {
-            this._addMessage(JSON.stringify({
-                type: "say",
-                text: message,
-                name: label,
-                mode: mode || "markdown",
-            }))
-        } else {
-            throw "Missing 'say' capability";
-        }
+    say(message, label, mode = "markdown") {
+        return new Promise((resolve, reject) => {
+            if (this.hasCapability("say")) {
+                this._addMessage({
+                    type: "say",
+                    text: message,
+                    name: label,
+                    mode: mode || "markdown",
+                    promise: {
+                        resolve,
+                        reject,
+                    }
+                })
+            } else {
+                reject("Missing 'say' capability");
+            }
+        });
     }
 
     /**
@@ -248,18 +363,24 @@ module.exports = class Client extends EventEmitter {
      * @example
      * client.tell("Steve", "Hello, Steve!", "Herobrine", "format")
      */
-    async tell(player, message, label, mode = "markdown") {
-        if (this.hasCapability("tell")) {
-            this._addMessage(JSON.stringify({
-                type: "tell",
-                user: player.toString(),
-                text: message,
-                name: label,
-                mode: mode || "markdown",
-            }))
-        } else {
-            throw "Missing 'tell' capability";
-        }
+    tell(player, message, label, mode = "markdown") {
+        return new Promise((resolve, reject) => {
+            if (this.hasCapability("tell")) {
+                this._addMessage({
+                    type: "tell",
+                    user: player.toString(),
+                    text: message,
+                    name: label,
+                    mode: mode || "markdown",
+                    promise: {
+                        resolve,
+                        reject,
+                    }
+                })
+            } else {
+                reject("Missing 'tell' capability");
+            }
+        });
     }
 
     getPlayer(uuid) {

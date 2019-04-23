@@ -10,9 +10,11 @@ module.exports = class BotCommand {
     constructor(client, data) {
         this.client = client;
 
-        this.command = data.command;
-        this.args = data.args;
-        this.rawCommand = data.rawCommand;
+        let args = data.args;
+
+        this.command = args.shift();
+        this.args = args;
+        this.rawCommand = data;
         this.player = data.player;
     }
 

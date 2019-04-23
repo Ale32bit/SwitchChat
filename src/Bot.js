@@ -45,15 +45,7 @@ module.exports = class Bot extends Client {
 
         this.on("command", async cmd => {
             if (cmd.command === this.options.command) {
-                let args = cmd.args;
-                let commandName = args.shift();
-
-                let botCommand = new BotCommand(this, {
-                    command: commandName,
-                    args: args,
-                    rawCommand: cmd,
-                    player: cmd.player,
-                });
+                let botCommand = new BotCommand(this, cmd);
 
                 let execute = true;
                 let ev = {
@@ -62,21 +54,46 @@ module.exports = class Bot extends Client {
                     }
                 };
 
+                /**
+                 * Emitted when a command is called
+                 *
+                 * @event BotPlugin#command
+                 */
                 this.emitPlugins("command", ev, botCommand);
 
-                let command = await this.getCommand(commandName);
+                let command = await this.getCommand(botCommand.command);
                 if (command) {
                     if (execute) {
                         try {
                             await command.callback(botCommand);
+                            /**
+                             * Emitted when a command succeeded
+                             *
+                             * @event BotPlugin#command_success
+                             */
                             this.emitPlugins("command_success", botCommand);
                         } catch (e) {
+                            /**
+                             * Emitted when a command failed
+                             *
+                             * @event BotPlugin#command_error
+                             */
                             this.emitPlugins("command_error", botCommand, e)
                         }
                     } else {
+                        /**
+                         * Emitted when a command has been prevented execution
+                         *
+                         * @event BotPlugins#command_killed
+                         */
                         this.emitPlugins("command_killed", botCommand);
                     }
                 } else {
+                    /**
+                     * Emitted when a command called does not exist
+                     *
+                     * @event BotPlugins#command_unknown
+                     */
                     this.emitPlugins("command_unknown", botCommand);
                 }
             }

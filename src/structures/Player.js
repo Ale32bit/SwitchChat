@@ -28,18 +28,24 @@ module.exports = class Player {
      * @example
      * player.tell("Hello, world!", "SteveBot", "markdown")
      */
-    async tell (message, label, mode = "markdown") {
-        if (this.client.hasCapability("tell")) {
-            this.client._addMessage(JSON.stringify({
-                type: "tell",
-                user: this.name,
-                text: message,
-                name: label,
-                mode: mode || "markdown",
-            }))
-        } else {
-            throw "Missing 'tell' capability";
-        }
+    tell(message, label, mode = "markdown") {
+        return new Promise((resolve, reject) => {
+            if (this.client.hasCapability("tell")) {
+                this.client._addMessage({
+                    type: "tell",
+                    user: this.toString(),
+                    text: message,
+                    name: label,
+                    mode: mode || "markdown",
+                    promise: {
+                        resolve,
+                        reject,
+                    }
+                })
+            } else {
+                reject("Missing 'tell' capability");
+            }
+        });
     }
 
     toString() {

@@ -55,7 +55,7 @@ console.log( client.players );
 
 ## Events
 These events are fired on client. You can listen to them with `client.on( event, callback )`
-* `chat - Get messages from in-game chat. Returns ChatMessage
+* `chat` - Get messages from in-game chat. Returns ChatMessage
 * `discord` - Get messages from Discord chat. Returns DiscordMessage
 * `command` - Get commands from players. Returns Command
 * `players` - Get players list each time a player joins or leave. Returns Map: UUID = Player

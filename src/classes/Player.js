@@ -6,18 +6,23 @@
     https://github.com/Ale32bit/SwitchChat
  */
 
+const CONSTANTS = require("../constants");
+
 module.exports = class Player {
-    constructor(client, data){
+    constructor(client, data) {
         this.client = client;
 
+        this.type = data.type || "ingame"; // ???
         this.name = data.name;
         this.uuid = data.uuid;
         this.displayName = data.displayName || this.name;
         this.displayNameFormatted = data.displayNameFormatted || this.displayName;
-        this.nickname = this.displayName;
-        this.username = this.name;
         this.world = data.world;
         this.group = data.group || "default";
+    }
+
+    get [Symbol.toStringTag]() {
+        return "Player";
     }
 
     /**
@@ -28,31 +33,24 @@ module.exports = class Player {
      * @example
      * player.tell("Hello, world!", "SteveBot", "markdown")
      */
-    tell(message, label, mode = "markdown") {
+    tell(message, label, mode = CONSTANTS.MODES.MARKDOWN) {
         return new Promise((resolve, reject) => {
-            if (this.client.hasCapability("tell")) {
-                this.client._addMessage({
-                    type: "tell",
-                    user: this.toString(),
-                    text: message,
-                    name: label,
-                    mode: mode || "markdown",
-                    promise: {
-                        resolve,
-                        reject,
-                    }
-                })
-            } else {
-                reject("Missing 'tell' capability");
-            }
+            this.client._queueMessage({
+                type: "tell",
+                user: this.toString(),
+                text: message,
+                name: label,
+                mode: mode,
+                promise: {
+                    resolve,
+                    reject,
+                }
+            })
+
         });
     }
 
     toString() {
         return this.name;
-    }
-
-    get [Symbol.toStringTag]() {
-        return "Player";
     }
 };

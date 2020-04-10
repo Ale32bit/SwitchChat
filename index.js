@@ -1,24 +1,19 @@
 /*
     SwitchChat Chatbox Module for SwitchCraft
-
-    Copyright (c) 2019 Alessandro "Ale32bit"
-
+    Copyright (c) 2020 Alessandro "AlexDevs"
     https://github.com/Ale32bit/SwitchChat
  */
 
 module.exports = {
     Client: require("./src/Client"),
-    ChatMessage: require("./src/structures/ChatMessage"),
-    Command: require("./src/structures/Command"),
-    Death: require("./src/structures/Death"),
-    DiscordMessage: require("./src/structures/DiscordMessage"),
-    DiscordUser: require("./src/structures/DiscordUser"),
-    DiscordRole: require("./src/structures/DiscordRole"),
-    Player: require("./src/structures/Player"),
 
-    Bot: require("./src/Bot"),
-    BotPlugin: require("./src/structures/BotPlugin"),
-    BotCommand: require("./src/structures/BotCommand"),
+    Command: require("./src/classes/Command"),
+    Death: require("./src/classes/Death"),
+    DiscordMessage: require("./src/classes/DiscordMessage"),
+    DiscordUser: require("./src/classes/DiscordUser"),
+    DiscordRole: require("./src/classes/DiscordRole"),
+    Message: require("./src/classes/Message"),
+    Player: require("./src/classes/Player"),
 
-    utils: require("./src/utils"),
+    constants: require("./src/constants"),
 };

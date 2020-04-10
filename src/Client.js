@@ -1,297 +1,345 @@
-/*
-    SwitchChat Chatbox Module for SwitchCraft
-
-    Copyright (c) 2019 Alessandro "Ale32bit"
-
-    https://github.com/Ale32bit/SwitchChat
+/**
+ * @module {Class} SwitchChat Client
  */
 
-const EventEmitter = require("events").EventEmitter;
+const {EventEmitter} = require("events");
 const WebSocket = require("ws");
-const Player = require("./structures/Player");
-const ChatMessage = require("./structures/ChatMessage");
-const DiscordMessage = require("./structures/DiscordMessage");
-const Death = require("./structures/Death");
-const Command = require("./structures/Command");
-const utils = require("./utils");
-const fs = require("fs");
-const path = require("path");
+const CONSTANT = require("./constants");
+const Player = require("./classes/Player");
+const Message = require("./classes/Message");
+const DiscordMessage = require("./classes/DiscordMessage");
+const Command = require("./classes/Command");
+const Death = require("./classes/Death");
 
 /**
- * SwitchCraft Chatbox Client
+ * SwitchChat Client Class
  * @class Client
- * @extends {EventEmitter}
+ * @extends EventEmitter
  */
-module.exports = class Client extends EventEmitter {
+class Client extends EventEmitter {
     /**
-     * @param {String} [licenseKey] Licence key for authentication
+     * @constructor
+     * @param {String} licenceKey
      * @param {Object} [options] Options
      * @example
      * new SwitchChat.Client('licence key')
      */
-    constructor(licenseKey = "guest", options = {}) {
+    constructor(licenceKey = "guest", options = {}) {
         super();
 
+        this.licence = licenceKey;
+
         this.options = {};
-        this.options.queueInterval = options.queueInterval || 350; // 350 milliseconds
-        this.options.restartOnNullOwner = options.restartOnNullOwner || true;
-        this.options.playersCachePath = options.playersCachePath || path.resolve(path.dirname(module.parent.filename), "playersCache.json");
 
-        /**
-         * URL of the WebSocket server
-         * @type {string} URL
-         */
-        this.endpoint = "wss://chat.switchcraft.pw/";
-        this.license = licenseKey;
+        // WARNING: Increase delay to allow multiple messages, 500 ms is recommended for max 20 messages at a time; 350ms for ~12 messages
+        this.options.queueDelay = options.queueDelay || 500; // Delay in ms between messages to avoid losses.
+
+        this.options.endpoint = options.endpoint || CONSTANT.ENDPOINT; // WebSocket endpoint
+        this.options.autoReconnect = options.autoReconnect || true; // Reconnect websocket automatically when the server restarts
+        this.options.reconnectDelay = options.reconnectDelay || 1000; // Time to wait in ms before attempting to reconnect to the server, defaults to 1 second
+
         this.players = new Map();
-        this.capabilities = {};
         this.owner = null;
-
-        this.CAPABILITIES = {
-            SAY: "say",
-            TELL: "tell",
-            READ: "read",
-            COMMAND: "command"
-        };
+        this.guest = true;
+        this.capabilities = [];
 
         this.running = false;
-        this.immediateRestart = false;
+        this._messageQueue = [];
+        this._promises = {};
 
-        this.queueInterval = null;
+        this._lastID = 0;
+        this._queueInterval = null;
 
-        this.messageQueue = [];
-
-        this.lastID = 0;
-        this.promises = {};
-
-        if (!fs.existsSync(this.options.playersCachePath)) fs.writeFileSync(this.options.playersCachePath, "[]");
-
-        this.playerCache = new Map(require(this.options.playersCachePath));
     }
 
-
     /**
-     * Connect to the server and authenticate the licence key
+     * @fires Client#ready
      * @returns {Promise}
-     * @fires Client#login
      */
     connect() {
         return new Promise((resolve, reject) => {
-            this.ws = new WebSocket(this.endpoint + this.license);
+            this.ws = new WebSocket(this.options.endpoint + this.licence);
             let ws = this.ws;
-            ws.on("message", data => {
-                data = JSON.parse(data);
-                this.emit("ws_message", data);
-                if (data.type === "hello") {
-                    if (data.ok) {
-                        this.capabilities = data.capabilities;
-                        this.guest = data.guest;
-                        this.owner = data.licenceOwner;
 
-                        this.queueInterval = setInterval(() => {
-                            if (this.messageQueue.length > 0) {
-                                this.ws.send(this.messageQueue.shift());
-                            }
-                        }, this.options.queueInterval);
-
-                        this.running = true;
-
-                        if (this.options.restartOnNullOwner) {
-                            if (!this.owner) {
-                                this.immediateRestart = true;
-                                this.reconnect();
-                            }
-                        }
-
-                        /**
-                         * Successful login
-                         *
-                         * @event Client#login
-                         */
-                        this.emit("login");
-
-                        return resolve();
-                    } else {
-                        this.running = false;
-                        return reject(data.reason);
-                    }
-                } else if (data.type === "success") {
-                    if (this.promises[data.id]) {
-                        this.promises[data.id].resolve({
-                            id: data.id,
-                            reason: data.reason,
-                            ok: true,
-                        })
-                    }
-                } else if (data.type === "players") {
-                    this.players = new Map();
-                    for (let i = 0; i < data.players.length; i++) {
-                        this.players.set(data.players[i].uuid, new Player(this, data.players[i]));
-                        this.playerCache.set(data.players[i].uuid, {
-                            name: data.players[i].name,
-                            uuid: data.players[i].uuid,
-                            world: data.players[i].world,
-                            group: data.players[i].group,
-                            displayName: data.players[i].displayName,
-                            displayNameFormatted: data.displayNameFormatted,
-                        });
-                    }
-                    fs.writeFileSync(this.options.playersCachePath, JSON.stringify([...this.playerCache]));
-                    /**
-                     * Players list updated
-                     *
-                     * @event Client#players
-                     * @type {Map}
-                     */
-                    this.emit("players", this.players);
-                } else if (data.type === "message") {
-                    if (data.channel === "chat") {
-                        /**
-                         * Get chat message
-                         *
-                         * @event Client#chat
-                         * @param {ChatMessage} message The chat message
-                         */
-                        this.emit("chat", new ChatMessage(this, data));
-                    } else if (data.channel === "discord") {
-                        /**
-                         * Get Discord chat message
-                         *
-                         * @event Client#discord
-                         * @param {DiscordMessage} discordMessage The Discord chat message
-                         */
-                        this.emit("discord", new DiscordMessage(this, data))
-                    }
-                } else if (data.type === "command") {
-                    /**
-                     * Emitted when a player runs a ChatBox command
-                     *
-                     * @event Client#command
-                     * @param {Command} command The command parsed
-                     */
-                    this.emit("command", new Command(this, data))
-                } else if (data.type === "event") {
-                    if (data.event === "join") {
-                        /**
-                         * Emitted when a player joins the server
-                         *
-                         * @event Client#join
-                         * @param {Player} player The player that joined
-                         */
-                        this.emit("join", new Player(this, data.user))
-                    } else if (data.event === "leave") {
-                        /**
-                         * Emitted when a player leaves the server
-                         *
-                         * @event Client#leave
-                         * @param {Player} player The player that left
-                         */
-                        this.emit("leave", new Player(this, data.user))
-                    } else if (data.event === "death") {
-                        /**
-                         * Emitted when a player dies
-                         *
-                         * @event Client#death
-                         * @param {Player} player The player that died
-                         */
-                        this.emit("death", new Death(this, data));
-                    } else if (data.event === "afk") {
-                        /**
-                         * Emitted when a player has gone away from keyboard
-                         *
-                         * @event Client#afk
-                         * @param {Player} player The player went AFK
-                         */
-                        this.emit("afk", new Player(this, data.user));
-                    } else if (data.event === "afk_return") {
-                        /**
-                         * Emitted when a player returns from AFK
-                         *
-                         * @event Client#afk_return
-                         * @param {Player} player The player that returned from AFK
-                         */
-                        this.emit("afk_return", new Player(this, data.user))
-                    }
-                } else if (data.type === "error") {
-                    /**
-                     * Emitted when the server returns an error from a request
-                     *
-                     * @event Client#_error
-                     * @type {object}
-                     * @property {string} error The error code
-                     * @property {string} message The error message
-                     * @property {boolean} ok Ok
-                     */
-                    this.emit("_error", {
-                        error: data.error,
-                        message: data.message,
-                        id: data.id ? data.id : -1,
-                        ok: data.ok,
-                    });
-
-                    if (data.id) {
-                        if (this.promises[data.id]) {
-                            this.promises[data.id].reject({
-                                error: data.error,
-                                message: data.message,
-                                id: data.id,
-                                ok: data.ok,
-                            });
-                        }
-                    }
-                } else if (data.type === "closing") {
-                    /**
-                     * Emitted when the server is closing
-                     *
-                     * @event Client#closing
-                     * @type {object}
-                     * @property {string} reason Reason code
-                     * @property {string} closeReason Reason message
-                     */
-                    this.emit("closing", {
-                        reason: data.reason,
-                        closeReason: data.closeReason,
-                    })
-                }
-            });
-
-            ws.on("close", () => {
+            ws.on("message", this._onMessage.bind(this));
+            ws.on("close", (code, reason) => {
                 if (this.running) {
-                    clearInterval(this.queueInterval);
+                    clearInterval(this._queueInterval);
+
                     let reconnect = () => {
-                        /**
-                         * Emitted when the client is attempting to reconnect
-                         *
-                         * @event Client#reconnect
-                         */
                         this.emit("reconnect");
-                        return resolve(this.connect());
+                        return this.connect();
                     };
-                    if (this.immediateRestart) {
-                        this.immediateRestart = false;
-                        setTimeout(reconnect, 1000); // 1s to prevent *dos*
-                    } else {
-                        setTimeout(reconnect, 3000)
-                    }
+
+                    setTimeout(reconnect, this.options.reconnectDelay);
                 }
             });
+            this.once("ready", resolve);
+        })
+    }
 
-            ws.on("error", (e) => {
+    _onMessage(message) {
+        let data = JSON.parse(message);
+        this.emit("raw", data);
+
+        if (data.type === "hello") { // Login event
+            if (data.ok) {
+                this.capabilities = data.capabilities;
+                this.guest = data.guest;
+                this.licenceOwner = this.isGuest ? null : data.licenceOwner;
+
+                this._queueInterval = setInterval(() => {
+                    if (this._messageQueue[0]) {
+                        this.ws.send(this._messageQueue.shift());
+                    }
+                }, this.options.queueDelay);
+
+                this.running = true;
+
                 /**
-                 * Emitted when the websocket fails
+                 * Client is connected and ready
                  *
-                 * @event Client#ws_error
-                 * @param {Error} e The error
+                 * @event Client#ready
                  */
-                this.emit("ws_error", e);
-            })
+                this.emit("ready");
+            } else {
+                this.running = false;
+                /**
+                 * Client couldn't connect correctly or failed licence authentication
+                 *
+                 * @event Client#error
+                 */
+                this.emit("error", data.reason);
+            }
+        } else if (data.type === "success") { // resolve .tell and .say promises
+            if (this._promises[data.id]) {
+                if (!this._promises[data.id].on || this._promises[data.id].on !== data.reason) return;
+                this._promises[data.id].resolve({
+                    id: data.id,
+                    reason: data.reason,
+                    ok: true,
+                });
+                delete this._promises[data.id];
+            }
+        } else if (data.type === "error") { // reject .tell and .say promises
+            if (this._promises[data.id]) {
+                this._promises[data.id].reject({
+                    id: data.id,
+                    error: data.error,
+                    message: data.message,
+                    ok: false,
+                });
+                delete this._promises[data.id];
+            }
+        } else if (data.type === "players") {
+            this.players.clear();
 
+            for (let i = 0; i < data.players.length; i++) {
+                let player = new Player(this, data.players[i]);
+                this.players.set(player.uuid, player);
+            }
+
+            /**
+             * Up to date map of online players
+             *
+             * @event Client#players
+             * @type {Map}
+             *
+             */
+            this.emit("players", this.players);
+        } else if (data.type === "message") {
+            if (data.type === "chat") {
+                if (data.channel === "chat") {
+
+
+                    /**
+                     * An in-game player has sent a chat message
+                     *
+                     * @event Client#chat
+                     * @type {Class}
+                     */
+                    this.emit("chat", new Message(this, data))
+                } else if (data.channel === "me") {
+
+                    /**
+                     * An in-game player has sent a "me" message
+                     *
+                     * @event Client#chat_me
+                     */
+                    this.emit("chat_me", new Message(this, data))
+                } else if (data.channel === "chatbox") {
+
+                    /**
+                     * A chatbox has sent a public message in chat
+                     *
+                     * @event Client#chat_chatbox
+                     */
+                    this.emit("chat_chatbox", new Message(this, data))
+                }
+            } else if (data.type === "discord") {
+
+                /**
+                 * A Discord user has sent a message
+                 *
+                 * @event Client#chat_discord
+                 */
+                this.emit("chat_discord", new DiscordMessage(this, data))
+            } else if (data.type === "command") {
+
+                /**
+                 * An in-game player has sent a command
+                 *
+                 * @event Client#command
+                 */
+                this.emit("command", new Command(this, data))
+            } else if (data.type === "event") {
+                if (data.event === "join") {
+
+                    /**
+                     * A player has joined the server
+                     *
+                     * @event Client#join
+                     */
+                    this.emit("join", new Player(this, data.user))
+                } else if (data.event === "leave") {
+
+                    /**
+                     * A player has left the server
+                     *
+                     * @event Client#leave
+                     */
+                    this.emit("leave", new Player(this, data.user))
+                } else if (data.event === "death") {
+
+                    /**
+                     * An in-game player has died
+                     *
+                     * @event Client#death
+                     */
+                    this.emit("death", new Death(this, data))
+                } else if (data.event === "afk") {
+
+                    /**
+                     * An in-game player has gone AFK
+                     *
+                     * @event Client#afk
+                     */
+                    this.emit("afk", new Player(this, data.user))
+                } else if (data.event === "afk_return") {
+
+                    /**
+                     * An in-game player has returned from AFK
+                     *
+                     * @event Client#afk_return
+                     */
+                    this.emit("afk_return", new Player(this, data.user)) // i can't seem to get this event emitted, server isn't sending any data
+                }
+            }
+        }
+    }
+
+    _queueMessage(data = {}) {
+
+        data.id = this._lastID;
+        if (data.promise) {
+            this._promises[this._lastID] = data.promise;
+            delete data.promise;
+        }
+
+        this._messageQueue.push(JSON.stringify(data));
+
+        this._lastID++;
+    }
+
+    // Standard functions
+
+    /**
+     * Say a message in chat
+     *
+     * @param text {string} Message
+     * @param [name] {string} ChatBox name
+     * @param [prefix] {string} ChatBox prefix
+     * @param [mode=markdown] {string}
+     * @returns {Promise<unknown>}
+     */
+    say(text, name, prefix, mode = CONSTANT.MODES.MARKDOWN) {
+        return new Promise((resolve, reject) => {
+            this._queueMessage({
+                type: "say",
+                text: text,
+                name: name,
+                prefix: prefix,
+                mode: mode,
+
+                promise: {resolve, reject, on: "messageSent"}, // internal usage
+            });
         });
     }
 
     /**
-     * Destroy WebSocket connection and don't connect anymore
+     * Tell a message to a player
+     *
+     * @param text {string} Message
+     * @param user {string} Player
+     * @param [name] {string} ChatBox name
+     * @param [prefix] {string} ChatBox prefix
+     * @param [mode=markdown] {string}
+     * @returns {Promise<unknown>}
      */
+    tell(text, user, name, prefix, mode = CONSTANT.MODES.MARKDOWN) {
+        return new Promise((resolve, reject) => {
+            this._queueMessage({
+                type: "tell",
+                text: text,
+                user: user,
+                name: name,
+                prefix: prefix,
+                mode: mode,
+
+                promise: {resolve, reject, on: "messageSent"}, // internal usage
+            })
+        });
+    }
+
+    getPlayers() {
+        return this.players.values();
+    }
+
+    getPlayerList() {
+        let players = [];
+        this.players.forEach(((value) => {
+            players.push(value);
+        }));
+        return players;
+    }
+
+    hasCapability(capability) {
+        for (let i = 0; i < this.capabilities.length; i++) {
+            if (capability === this.capabilities[i]) return true;
+        }
+        return false;
+    }
+
+    getLicenceOwner() {
+        return this.licenceOwner;
+    }
+
+    // extra methods
+
+    isConnected() {
+        return this.running;
+    }
+
+    isGuest() {
+        return this.guest
+    }
+
+    reconnect() {
+        if (this.running) {
+            this.ws.close();
+        }
+    }
+
     destroy() {
         if (this.running) {
             this.running = false;
@@ -299,97 +347,6 @@ module.exports = class Client extends EventEmitter {
         }
     }
 
-    /**
-     * Close and restart WebSocket connection
-     */
-    reconnect() {
-        if (this.running) {
-            this.ws.close();
-        }
-    }
+}
 
-    /**
-     * Check if the client can do certain actions
-     * @param {string} capability
-     * @returns {boolean}
-     */
-    hasCapability(capability) {
-        return utils.inArray(this.capabilities, capability);
-    }
-
-    _addMessage(data) {
-        this.lastID++;
-        data.id = this.lastID;
-        if (data.promise) {
-            this.promises[this.lastID] = data.promise;
-            delete data.promise;
-        }
-        this.messageQueue.push(JSON.stringify(data));
-    }
-
-    /**
-     * Say a message to all players
-     * @param {string} message Content of the message
-     * @param {string} [label] Label of the message
-     * @param {string} [mode] Mode preferred to display the message. "markdown" and "format"
-     * @example
-     * client.say("Hello, world!", "SteveBot", "markdown")
-     */
-    say(message, label, mode = "markdown") {
-        return new Promise((resolve, reject) => {
-            if (this.hasCapability("say")) {
-                this._addMessage({
-                    type: "say",
-                    text: message,
-                    name: label,
-                    mode: mode || "markdown",
-                    promise: {
-                        resolve,
-                        reject,
-                    }
-                })
-            } else {
-                reject("Missing 'say' capability");
-            }
-        });
-    }
-
-    /**
-     * Tell a message to a player
-     * @param {String} player Recipient
-     * @param {String} message Content of the message
-     * @param {string} [label] Label of the message
-     * @param {string} [mode] Mode preferred to display the message. "markdown" and "format"
-     * @example
-     * client.tell("Steve", "Hello, Steve!", "Herobrine", "format")
-     */
-    tell(player, message, label, mode = "markdown") {
-        return new Promise((resolve, reject) => {
-            if (this.hasCapability("tell")) {
-                this._addMessage({
-                    type: "tell",
-                    user: player.toString(),
-                    text: message,
-                    name: label,
-                    mode: mode || "markdown",
-                    promise: {
-                        resolve,
-                        reject,
-                    }
-                })
-            } else {
-                reject("Missing 'tell' capability");
-            }
-        });
-    }
-
-    getPlayer(uuid) {
-        return new Promise((resolve, reject) => {
-            if (this.playerCache.has(uuid)) {
-                return resolve(new Player(this, this.playerCache.get(uuid)));
-            } else {
-                return reject("UUID not found");
-            }
-        });
-    }
-};
+module.exports = Client;

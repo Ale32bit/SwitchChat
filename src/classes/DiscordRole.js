@@ -6,21 +6,23 @@
     https://github.com/Ale32bit/SwitchChat
  */
 
+const CONSTANTS = require("../constants");
+
 module.exports = class DiscordRole {
     constructor(client, data) {
         this.client = client;
 
-        this.name = data.name;
         this.id = data.id;
+        this.name = data.name;
+        this.colour = data.colour;
         this.color = data.colour;
-        this.colour = data.colour; // For our british friends
-    }
-
-    toString() {
-        return this.name;
     }
 
     get [Symbol.toStringTag]() {
         return "DiscordRole";
+    }
+
+    toString() {
+        return this.name;
     }
 };

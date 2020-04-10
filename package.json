@@ -1,27 +1,24 @@
 {
   "name": "switchchat",
-  "version": "1.6.2",
-  "description": "Chatbox Module for SwitchCraft Server",
+  "version": "2.0.0",
+  "description": "SwitchCraft ChatBox framework for Node.js",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Alessandro \"Ale32bit\"",
+  "keywords": [],
+  "author": "Alessandro \"AlexDevs\"",
   "license": "MIT",
   "dependencies": {
-    "ws": "^6.1.4"
+    "ws": "^7.2.3"
   },
+  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ale32bit/SwitchChat.git"
   },
-  "keywords": [
-    "switchcraft",
-    "minecraft"
-  ],
   "bugs": {
     "url": "https://github.com/Ale32bit/SwitchChat/issues"
   },
-  "homepage": "https://github.com/Ale32bit/SwitchChat#readme",
-  "devDependencies": {}
+  "homepage": "https://github.com/Ale32bit/SwitchChat#readme"
 }

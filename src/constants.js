@@ -1,3 +1,11 @@
+/*
+    SwitchChat Chatbox Module for SwitchCraft
+
+    Copyright (c) 2020 Alessandro "Ale32bit"
+
+    https://github.com/Ale32bit/SwitchChat
+ */
+
 module.exports = {
     ENDPOINT: "wss://chat.switchcraft.pw/",
     CLOSE_REASONS: {

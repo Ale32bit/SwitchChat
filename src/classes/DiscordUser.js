@@ -1,7 +1,7 @@
 /*
     SwitchChat Chatbox Module for SwitchCraft
 
-    Copyright (c) 2019 Alessandro "Ale32bit"
+    Copyright (c) 2020 Alessandro "Ale32bit"
 
     https://github.com/Ale32bit/SwitchChat
  */
@@ -9,7 +9,7 @@
 const CONSTANTS = require("../constants");
 const DiscordRole = require("./DiscordRole");
 
-module.exports = class Player {
+module.exports = class DiscordUser {
     constructor(client, data) {
         this.client = client;
 

@@ -35,7 +35,7 @@ client.on("chat", function(message){
 client.say("Hello, world", "ChatBot");
 
 // Tell a message to a player
-client.tell("Hello, Steve", "Steve", "Herobrine");
+client.tell("Steve", "Hello, Steve", "Herobrine");
 
 // Get boolean of the capability
 client.hasCapability( "say" );

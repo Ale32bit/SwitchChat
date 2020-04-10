@@ -1,6 +1,8 @@
 /*
     SwitchChat Chatbox Module for SwitchCraft
-    Copyright (c) 2020 Alessandro "AlexDevs"
+
+    Copyright (c) 2020 Alessandro "Ale32bit"
+
     https://github.com/Ale32bit/SwitchChat
  */
 

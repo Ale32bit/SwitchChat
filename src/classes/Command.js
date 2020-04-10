@@ -1,7 +1,7 @@
 /*
     SwitchChat Chatbox Module for SwitchCraft
 
-    Copyright (c) 2019 Alessandro "Ale32bit"
+    Copyright (c) 2020 Alessandro "Ale32bit"
 
     https://github.com/Ale32bit/SwitchChat
  */
@@ -21,8 +21,18 @@ module.exports = class Command {
         this.user = new Player(this.client, data.user)
     }
 
+
+    /**
+     * Reply to the user
+     * @param text {string} Message
+     * @param [name] {string} ChatBox name
+     * @param [prefix] {string} ChatBox prefix
+     * @param [mode=markdown] {string}
+     * @example
+     * command.reply("Hello, world!", "SteveBot")
+     */
     reply(text, name, prefix, mode = CONSTANTS.MODES.MARKDOWN) {
-        return this.client.tell(text, this.user.name, name, prefix, mode)
+        return this.client.tell(this.user.name, text, name, prefix, mode)
     }
 
     get [Symbol.toStringTag]() {

@@ -1,3 +1,11 @@
+/*
+    SwitchChat Chatbox Module for SwitchCraft
+
+    Copyright (c) 2020 Alessandro "Ale32bit"
+
+    https://github.com/Ale32bit/SwitchChat
+ */
+
 /**
  * @module {Class} SwitchChat Client
  */
@@ -279,19 +287,19 @@ class Client extends EventEmitter {
     /**
      * Tell a message to a player
      *
-     * @param text {string} Message
      * @param user {string} Player
+     * @param text {string} Message
      * @param [name] {string} ChatBox name
      * @param [prefix] {string} ChatBox prefix
      * @param [mode=markdown] {string}
      * @returns {Promise<unknown>}
      */
-    tell(text, user, name, prefix, mode = CONSTANT.MODES.MARKDOWN) {
+    tell(user, text, name, prefix, mode = CONSTANT.MODES.MARKDOWN) {
         return new Promise((resolve, reject) => {
             this._queueMessage({
                 type: "tell",
-                text: text,
                 user: user,
+                text: text,
                 name: name,
                 prefix: prefix,
                 mode: mode,

@@ -47,7 +47,7 @@ class Client extends EventEmitter {
         this.options.reconnectDelay = options.reconnectDelay || 1000; // Time to wait in ms before attempting to reconnect to the server, defaults to 1 second
 
         this.players = new Map();
-        this.owner = null;
+        this.licenceOwner = null;
         this.guest = true;
         this.capabilities = [];
 
@@ -94,7 +94,7 @@ class Client extends EventEmitter {
             if (data.ok) {
                 this.capabilities = data.capabilities;
                 this.guest = data.guest;
-                this.licenceOwner = this.isGuest ? null : data.licenceOwner;
+                this.licenceOwner = this.guest ? null : data.licenceOwner;
 
                 this._queueInterval = setInterval(() => {
                     if (this._messageQueue[0]) {
@@ -353,6 +353,10 @@ class Client extends EventEmitter {
             this.running = false;
             this.ws.close();
         }
+    }
+
+    get owner() {
+        return this.licenceOwner;
     }
 
 }

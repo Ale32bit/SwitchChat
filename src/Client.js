@@ -60,6 +60,10 @@ class Client extends EventEmitter {
 
     }
 
+    get owner() {
+        return this.licenceOwner;
+    }
+
     /**
      * @fires Client#ready
      * @returns {Promise}
@@ -156,35 +160,32 @@ class Client extends EventEmitter {
              */
             this.emit("players", this.players);
         } else if (data.type === "message") {
-            if (data.type === "chat") {
-                if (data.channel === "chat") {
+            if (data.channel === "chat") {
 
+                /**
+                 * An in-game player has sent a chat message
+                 *
+                 * @event Client#chat
+                 * @type {Class}
+                 */
+                this.emit("chat", new Message(this, data))
+            } else if (data.channel === "me") {
 
-                    /**
-                     * An in-game player has sent a chat message
-                     *
-                     * @event Client#chat
-                     * @type {Class}
-                     */
-                    this.emit("chat", new Message(this, data))
-                } else if (data.channel === "me") {
+                /**
+                 * An in-game player has sent a "me" message
+                 *
+                 * @event Client#chat_me
+                 */
+                this.emit("chat_me", new Message(this, data))
+            } else if (data.channel === "chatbox") {
 
-                    /**
-                     * An in-game player has sent a "me" message
-                     *
-                     * @event Client#chat_me
-                     */
-                    this.emit("chat_me", new Message(this, data))
-                } else if (data.channel === "chatbox") {
-
-                    /**
-                     * A chatbox has sent a public message in chat
-                     *
-                     * @event Client#chat_chatbox
-                     */
-                    this.emit("chat_chatbox", new Message(this, data))
-                }
-            } else if (data.type === "discord") {
+                /**
+                 * A chatbox has sent a public message in chat
+                 *
+                 * @event Client#chat_chatbox
+                 */
+                this.emit("chat_chatbox", new Message(this, data))
+            } else if (data.channel === "discord") {
 
                 /**
                  * A Discord user has sent a message
@@ -192,59 +193,61 @@ class Client extends EventEmitter {
                  * @event Client#chat_discord
                  */
                 this.emit("chat_discord", new DiscordMessage(this, data))
-            } else if (data.type === "command") {
+            }
+        } else if (data.type === "command") {
+
+            /**
+             * An in-game player has sent a command
+             *
+             * @event Client#command
+             */
+            this.emit("command", new Command(this, data))
+        } else if (data.type === "event") {
+            if (data.event === "join") {
 
                 /**
-                 * An in-game player has sent a command
+                 * A player has joined the server
                  *
-                 * @event Client#command
+                 * @event Client#join
                  */
-                this.emit("command", new Command(this, data))
-            } else if (data.type === "event") {
-                if (data.event === "join") {
+                this.emit("join", new Player(this, data.user))
+            } else if (data.event === "leave") {
 
-                    /**
-                     * A player has joined the server
-                     *
-                     * @event Client#join
-                     */
-                    this.emit("join", new Player(this, data.user))
-                } else if (data.event === "leave") {
+                /**
+                 * A player has left the server
+                 *
+                 * @event Client#leave
+                 */
+                this.emit("leave", new Player(this, data.user))
+            } else if (data.event === "death") {
 
-                    /**
-                     * A player has left the server
-                     *
-                     * @event Client#leave
-                     */
-                    this.emit("leave", new Player(this, data.user))
-                } else if (data.event === "death") {
+                /**
+                 * An in-game player has died
+                 *
+                 * @event Client#death
+                 */
+                this.emit("death", new Death(this, data))
+            } else if (data.event === "afk") {
 
-                    /**
-                     * An in-game player has died
-                     *
-                     * @event Client#death
-                     */
-                    this.emit("death", new Death(this, data))
-                } else if (data.event === "afk") {
+                /**
+                 * An in-game player has gone AFK
+                 *
+                 * @event Client#afk
+                 */
+                this.emit("afk", new Player(this, data.user))
+            } else if (data.event === "afk_return") {
 
-                    /**
-                     * An in-game player has gone AFK
-                     *
-                     * @event Client#afk
-                     */
-                    this.emit("afk", new Player(this, data.user))
-                } else if (data.event === "afk_return") {
-
-                    /**
-                     * An in-game player has returned from AFK
-                     *
-                     * @event Client#afk_return
-                     */
-                    this.emit("afk_return", new Player(this, data.user)) // i can't seem to get this event emitted, server isn't sending any data
-                }
+                /**
+                 * An in-game player has returned from AFK
+                 *
+                 * @event Client#afk_return
+                 */
+                this.emit("afk_return", new Player(this, data.user)) // i can't seem to get this event emitted, server isn't sending any data
             }
         }
     }
+
+    // Standard functions
 
     _queueMessage(data = {}) {
 
@@ -258,8 +261,6 @@ class Client extends EventEmitter {
 
         this._lastID++;
     }
-
-    // Standard functions
 
     /**
      * Say a message in chat
@@ -328,11 +329,11 @@ class Client extends EventEmitter {
         return false;
     }
 
+    // extra methods
+
     getLicenceOwner() {
         return this.licenceOwner;
     }
-
-    // extra methods
 
     isConnected() {
         return this.running;
@@ -353,10 +354,6 @@ class Client extends EventEmitter {
             this.running = false;
             this.ws.close();
         }
-    }
-
-    get owner() {
-        return this.licenceOwner;
     }
 
 }

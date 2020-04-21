@@ -22,7 +22,7 @@ module.exports = class DiscordMessage {
         this.channel = data.channel;
         this.time = new Date(data.time);
         this.edited = data.edited;
-        this.user = new DiscordUser(this.client, data.user)
+        this.user = new DiscordUser(this.client, data.discordUser)
     }
 
     get [Symbol.toStringTag]() {

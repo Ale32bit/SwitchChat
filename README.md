@@ -54,6 +54,8 @@ client.reconnect();
 These events are fired on client. You can listen to them with `client.on( event, callback )`
 * `chat` - Get messages from in-game chat. Returns Message
 * `chat_discord` - Get messages from Discord chat. Returns DiscordMessage
+* `chat_me` - Get messages from /me. Returns Message
+* `chat_chatbox` - Get messages from Chatboxes. Returns Message
 * `command` - Get commands from players. Returns Command
 * `players` - Get players list each time a player joins or leave. Returns Map: UUID = Player
 * `join` - Get player that just joined. Returns Player

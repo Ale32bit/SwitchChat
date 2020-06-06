@@ -86,6 +86,9 @@ class Client extends EventEmitter {
                     setTimeout(reconnect, this.options.reconnectDelay);
                 }
             });
+            ws.on("error", e => {
+                this.emit("ws_error", e)
+            })
             this.once("ready", resolve);
         })
     }

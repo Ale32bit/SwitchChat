@@ -12,7 +12,7 @@
 
 const {EventEmitter} = require("events");
 const WebSocket = require("ws");
-const CONSTANT = require("./constants");
+const CONSTANTS = require("./constants");
 const Player = require("./classes/Player");
 const Message = require("./classes/Message");
 const DiscordMessage = require("./classes/DiscordMessage");
@@ -42,7 +42,7 @@ class Client extends EventEmitter {
         // WARNING: Increase delay to allow multiple messages, 500 ms is recommended for max 20 messages at a time; 350ms for ~12 messages
         this.options.queueDelay = options.queueDelay || 500; // Delay in ms between messages to avoid losses.
 
-        this.options.endpoint = options.endpoint || CONSTANT.ENDPOINT; // WebSocket endpoint
+        this.options.endpoint = options.endpoint || CONSTANTS.ENDPOINT; // WebSocket endpoint
         this.options.autoReconnect = options.autoReconnect || true; // Reconnect websocket automatically when the server restarts
         this.options.reconnectDelay = options.reconnectDelay || 1000; // Time to wait in ms before attempting to reconnect to the server, defaults to 1 second
 
@@ -52,6 +52,7 @@ class Client extends EventEmitter {
         this.capabilities = [];
 
         this.running = false;
+        this.started = false;
         this._messageQueue = [];
         this._promises = {};
 
@@ -89,7 +90,10 @@ class Client extends EventEmitter {
             ws.on("error", e => {
                 this.emit("ws_error", e)
             })
-            this.once("ready", resolve);
+            if (!this.started) {
+                this.started = true;
+                this.once("ready", resolve);
+            }
         })
     }
 
@@ -274,7 +278,7 @@ class Client extends EventEmitter {
      * @param [mode=markdown] {string}
      * @returns {Promise<unknown>}
      */
-    say(text, name, prefix, mode = CONSTANT.MODES.MARKDOWN) {
+    say(text, name, prefix, mode = CONSTANTS.MODES.MARKDOWN) {
         return new Promise((resolve, reject) => {
             this._queueMessage({
                 type: "say",
@@ -298,7 +302,7 @@ class Client extends EventEmitter {
      * @param [mode=markdown] {string}
      * @returns {Promise<unknown>}
      */
-    tell(user, text, name, prefix, mode = CONSTANT.MODES.MARKDOWN) {
+    tell(user, text, name, prefix, mode = CONSTANTS.MODES.MARKDOWN) {
         return new Promise((resolve, reject) => {
             this._queueMessage({
                 type: "tell",
@@ -355,6 +359,7 @@ class Client extends EventEmitter {
     destroy() {
         if (this.running) {
             this.running = false;
+            this.started = false;
             this.ws.close();
         }
     }

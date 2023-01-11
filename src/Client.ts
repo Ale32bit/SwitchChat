@@ -17,43 +17,181 @@ import {Leave} from "./events/Leave";
 import {Death} from "./events/Death";
 import {AFK} from "./events/AFK";
 import {AFKReturn} from "./events/AFKReturn";
+import {QueueMessage} from "./types/QueueMessage";
+import {Success} from "./packets/Success";
+import {Error} from "./packets/Error";
+import {Closing} from "./packets/Closing";
 
 export declare interface Client {
-    owner: string | undefined,
-    capabilities: string[],
-    players: User[],
+    /**
+     * Name of the owner of the chatbox license
+     */
+    owner: string;
+
+    /**
+     * List of capabilities this chatbox license can do
+     */
+    capabilities: string[];
+
+    /**
+     * List of currently online players
+     */
+    players: User[];
+
+    /**
+     * Default name for chatbox messages
+     */
+    defaultName: string | undefined;
+    /**
+     * Default formatting mode for say and tell messages.
+     * Defaults to "markdown"
+     */
+    defaultFormattingMode: constants.mode;
+
+    /**
+     * Connect to the Chatbox server
+     * @param callback Callback to run when the connection is open
+     */
+    connect(callback?: (client?: Client) => void): void;
+
+    /**
+     * Close the connection to the Chatbox server
+     */
+    close(): void;
+
+    /**
+     * Close and reconnect to the Chatbox server
+     * @param wait Whether to wait before reconnecting.
+     */
+    reconnect(wait?: boolean): void;
+
+    say(text: string, name?: string, mode?: constants.mode): Promise<Success>;
+
+    tell(user: string, text: string, name?: string, mode?: constants.mode): Promise<Success>;
 
     on(event: "ready", listener: () => void): this;
+
     on(event: "players", listener: () => void): this;
+
+    on(event: "closing", listener: () => void): this;
+
+    on(event: "error", listener: () => void): this;
+
     on(event: "raw", listener: (rawData: { [key: string]: any }) => void): this;
 
     // Server Events
     on(event: "chat_ingame", listener: (message: IngameChatMessage) => void): this;
+
     on(event: "chat_discord", listener: (message: DiscordChatMessage) => void): this;
+
     on(event: "chat_chatbox", listener: (message: ChatboxChatMessage) => void): this;
+
     on(event: "command", listener: (command: ChatboxCommand) => void): this;
+
     on(event: "join", listener: (join: Join) => void): this;
+
     on(event: "leave", listener: (leave: Leave) => void): this;
+
     on(event: "death", listener: (death: Death) => void): this;
+
     on(event: "afk", listener: (afk: AFK) => void): this;
+
     on(event: "afk_return", listener: (afkReturn: AFKReturn) => void): this;
+
     on(event: "server_restart_scheduled", listener: (event: BaseEvent) => void): this;
+
     on(event: "server_restart_cancelled", listener: (event: BaseEvent) => void): this;
 }
 
 export class Client extends events.EventEmitter {
-    owner: string | undefined;
-    capabilities: string[]
+    owner: string = "Guest";
+    capabilities: string[];
+    players: User[] = [];
+    defaultName: string | undefined;
+    defaultFormattingMode: constants.mode = constants.mode.markdown;
+    waitTimeRestart: number = 60000;
+    private _delay: number = 500;
+    private readonly _queue: QueueMessage[] = [];
+    private readonly _awaitingQueue: { [key: number]: QueueMessage } = {};
+
     private readonly _token: string;
-    private _ws: WebSocket;
+    private _ws?: WebSocket;
+    private _queueInterval?: NodeJS.Timer;
+    private _queueCounter = 0;
 
     constructor(token: string) {
         super();
-        this._token = token;
         this.capabilities = [];
 
+        this._token = token;
+    }
+
+    private initQueueInterval() {
+        this._queueInterval = setInterval(this._processQueue.bind(this), this._delay);
+    }
+
+    public say(text: string, name?: string, mode: constants.mode = this.defaultFormattingMode): Promise<Success> {
+        return new Promise((resolve, reject) => {
+            name = name ?? this.defaultName;
+
+            this._queue.push({
+                data: {
+                    id: this._queueCounter++,
+                    type: "say",
+                    text: text,
+                    name: name,
+                    mode: mode,
+                },
+                resolve: resolve,
+                reject: reject,
+            });
+        });
+    }
+
+    public tell(user: string, text: string, name?: string, mode: constants.mode = this.defaultFormattingMode): Promise<Success> {
+        return new Promise((resolve, reject) => {
+            name = name ?? this.defaultName;
+
+            this._queue.push({
+                data: {
+                    id: this._queueCounter++,
+                    type: "tell",
+                    user: user,
+                    text: text,
+                    name: name,
+                    mode: mode,
+                },
+                resolve: resolve,
+                reject: reject,
+            });
+        });
+    }
+
+    public connect(callback?: (client?: Client) => void) {
         this._ws = new WebSocket(constants.endpoint + this._token);
-        this._ws.on("message", this._onMessage.bind(this))
+        this._ws.on("message", this._onMessage.bind(this));
+
+        if (callback) {
+            this._ws.on("open", () => callback(this))
+        }
+    }
+
+    public close() {
+        clearInterval(this._queueInterval);
+        if (this._ws && (this._ws.readyState === this._ws.OPEN || this._ws.readyState === this._ws.CONNECTING)) {
+            this._ws.close();
+        }
+    }
+
+    public reconnect(wait: boolean = false) {
+        this.close();
+
+        setTimeout(this.connect.bind(this), wait ? this.waitTimeRestart : 0);
+    }
+
+    private _onReady() {
+        this.initQueueInterval();
+        this.emit("ready");
     }
 
     private _onMessage(rawData: string) {
@@ -67,8 +205,7 @@ export class Client extends events.EventEmitter {
                 this.owner = hello.licenseOwner;
                 this.capabilities = hello.capabilities;
 
-                this.emit("ready");
-
+                this._onReady();
                 break;
 
             case "players":
@@ -82,10 +219,44 @@ export class Client extends events.EventEmitter {
                 event.time = new Date(event.time);
                 this._handleEvent(event);
                 break;
+            case "error":
+                let error = data as Error
+                if (error.id && this._awaitingQueue[error.id]) {
+                    let promise = this._awaitingQueue[error.id];
+                    promise.reject(error);
+                    delete this._awaitingQueue[error.id];
+                }
+
+                break;
+            case "success":
+                let success = data as Success;
+                let promise = this._awaitingQueue[success.id];
+                if (promise && success.reason === "message_sent") {
+                    promise.resolve(success);
+                    delete this._awaitingQueue[success.id];
+                }
+
+                break;
+
+            case "closing":
+                let closing = data as Closing;
+                this.emit("closing", closing);
+                // server is shutting down, and we need to restart the connection
+                if (closing.closeReason === "server_stopping") {
+                    this.reconnect(true);
+                }
         }
     }
 
     private _handleEvent(event: BaseEvent) {
         this.emit(event.event, event)
+    }
+
+    private _processQueue() {
+        const data = this._queue.shift();
+        if (data) {
+            this._ws?.send(JSON.stringify(data.data));
+            this._awaitingQueue[data.data.id] = data;
+        }
     }
 }

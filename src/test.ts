@@ -1,6 +1,6 @@
 import * as SwitchChat from "./index";
 
-const client = new SwitchChat.Client("cfcf7298-8d32-4703-953a-0ab7df25c25c");
+const client = new SwitchChat.Client("");
 console.log("start")
 
 client.on("ready", () => {

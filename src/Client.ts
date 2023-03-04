@@ -124,6 +124,18 @@ export class Client extends events.EventEmitter {
         this.capabilities = [];
 
         this._token = token;
+
+        this.on("afk",        e => this.updatePlayer(e.user));
+        this.on("afk_return", e => this.updatePlayer(e.user));
+    }
+
+    private updatePlayer(player: User) {
+        const existing = this.players.find((p) => p.uuid === player.uuid);
+        if (existing) {
+            Object.assign(existing, player);
+        } else {
+            this.players.push(player);
+        }
     }
 
     private initQueueInterval() {

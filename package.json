@@ -1,12 +1,12 @@
 {
   "name": "switchchat",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Framework for the SwitchCraft Chatbox v2",
   "main": "dist/index.js",
   "types": "types/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\""
   },
   "repository": {
     "type": "git",

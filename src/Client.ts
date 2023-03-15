@@ -2,7 +2,6 @@ import * as events from "events";
 import * as constants from "./constants";
 import WebSocket from "ws";
 
-import * as hello from "./packets/Hello";
 import {Data} from "./packets/Data";
 import {Hello} from "./packets/Hello";
 import {User} from "./types/User";

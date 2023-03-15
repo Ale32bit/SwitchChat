@@ -6,7 +6,8 @@
   "types": "types/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\""
+    "test": "echo \"Error: no test specified\"",
+    "docs": "typedoc"
   },
   "repository": {
     "type": "git",
@@ -14,6 +15,8 @@
   },
   "keywords": [
     "switchchat",
+    "switchcraft",
+    "sc3",
     "websocket"
   ],
   "author": "Alessandro \"AlexDevs\" Proto",
@@ -27,6 +30,7 @@
     "ws": "^8.12.0"
   },
   "devDependencies": {
+    "typedoc": "^0.23.26",
     "typescript": "^4.9.4"
   }
 }

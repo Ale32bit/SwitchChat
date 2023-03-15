@@ -1,0 +1,7 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "name": "SwitchChat API reference",
+  "includeVersion": true,
+  "excludeInternal": true
+}

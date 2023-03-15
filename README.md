@@ -2,7 +2,7 @@
 
 SwitchCraft Chatbox v2 module for Node.js written in TypeScript
 
-LOOKING FOR MAINTAINERS!
+[![npm version](https://badge.fury.io/js/switchchat.svg)](https://www.npmjs.org/package/switchchat)
 
 ## Installation
 

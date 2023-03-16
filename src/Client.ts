@@ -23,6 +23,7 @@ import {Closing} from "./packets/Closing";
 import {Capability} from "./types/Capabilities";
 import {ServerRestartScheduled} from "./events/ServerRestartScheduled";
 import {ServerRestartCancelled} from "./events/ServerRestartCancelled";
+import {FormattingMode} from "./types";
 
 export declare interface Client {
     /**
@@ -42,6 +43,11 @@ export declare interface Client {
     players: User[];
 
     /**
+     * Endpoint of the Chatbox server. Must include `wss://` and the version route. Defaults to `wss://chat.sc3.io/v2/`.
+     */
+    endpoint: string;
+
+    /**
      * Default name for chatbox messages
      */
     defaultName: string | undefined;
@@ -50,7 +56,7 @@ export declare interface Client {
      * Default formatting mode for say and tell messages.
      * Defaults to "markdown"
      */
-    defaultFormattingMode: constants.mode;
+    defaultFormattingMode: FormattingMode;
 
     /**
      * Connect to the Chatbox server
@@ -85,7 +91,7 @@ export declare interface Client {
      * 
      * @returns A {@link Success} object containing whether the message was sent or queued.
      */
-    say(text: string, name?: string, mode?: constants.mode): Promise<Success>;
+    say(text: string, name?: string, mode?: FormattingMode): Promise<Success>;
 
     /**
      * Sends a private message to an in-game player.
@@ -104,7 +110,7 @@ export declare interface Client {
      * 
      * @returns A {@link Success} object containing whether the message was sent or queued.
      */
-    tell(user: string, text: string, name?: string, mode?: constants.mode): Promise<Success>;
+    tell(user: string, text: string, name?: string, mode?: FormattingMode): Promise<Success>;
 
     /** Emitted when the Chatbox client is ready to send and receive messages. */
     on(event: "ready", listener: () => void): this;
@@ -202,8 +208,9 @@ export class Client extends events.EventEmitter {
     owner: string = "Guest";
     capabilities: Capability[];
     players: User[] = [];
+    endpoint: string = constants.endpoint;
     defaultName: string | undefined;
-    defaultFormattingMode: constants.mode = constants.mode.markdown;
+    defaultFormattingMode: FormattingMode = "markdown";
     waitTimeRestart: number = 60000;
     private _delay: number = 500;
     private readonly _queue: QueueMessage[] = [];
@@ -237,7 +244,7 @@ export class Client extends events.EventEmitter {
         this._queueInterval = setInterval(this._processQueue.bind(this), this._delay);
     }
 
-    public say(text: string, name?: string, mode: constants.mode = this.defaultFormattingMode): Promise<Success> {
+    public say(text: string, name?: string, mode: FormattingMode = this.defaultFormattingMode): Promise<Success> {
         return new Promise((resolve, reject) => {
             name = name ?? this.defaultName;
 
@@ -255,7 +262,7 @@ export class Client extends events.EventEmitter {
         });
     }
 
-    public tell(user: string, text: string, name?: string, mode: constants.mode = this.defaultFormattingMode): Promise<Success> {
+    public tell(user: string, text: string, name?: string, mode: FormattingMode = this.defaultFormattingMode): Promise<Success> {
         return new Promise((resolve, reject) => {
             name = name ?? this.defaultName;
 
@@ -275,7 +282,7 @@ export class Client extends events.EventEmitter {
     }
 
     public connect(callback?: (client?: Client) => void) {
-        this._ws = new WebSocket(constants.endpoint + this._token);
+        this._ws = new WebSocket(this.endpoint + this._token);
         this._ws.on("message", this._onMessage.bind(this));
 
         if (callback) {

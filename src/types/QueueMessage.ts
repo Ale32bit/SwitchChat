@@ -1,6 +1,6 @@
-import * as constants from "../constants";
-import {Success} from "../packets/Success";
-import {Error} from "../packets/Error";
+import {Success} from "../packets";
+import {Error} from "../packets";
+import {FormattingMode} from "./RenderedTextObject";
 
 /** @internal */
 export interface QueueMessage {
@@ -10,7 +10,7 @@ export interface QueueMessage {
         user?: string;
         name: string | undefined;
         text: string;
-        mode: constants.mode;
+        mode: FormattingMode;
     };
     resolve: (value: Success) => void;
     reject: (reason: Error) => void;

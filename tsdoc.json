@@ -1,0 +1,13 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/tsdoc/v0/tsdoc.schema.json",
+  "tagDefinitions": [
+    {
+      "tagName": "@group",
+      "syntaxKind": "block"
+    },
+    {
+      "tagName": "@event",
+      "syntaxKind": "block"
+    }
+  ]
+}

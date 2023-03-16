@@ -71,8 +71,8 @@ You are able to listen after the following events:
 
 ### Ingame Chat
 
-- text - `String` of the contents of the chat message
-- rawText - `String` of the raw contents of the chat message
+- text - `string` of the contents of the chat message
+- rawText - `string` of the raw contents of the chat message
 - renderedText - `RenderedTextObject` of the rendered text of the chat message
 - user - `User` that sent the message
 
@@ -138,8 +138,8 @@ You are also able to listen after these packets that are sent by SwitchCraft to 
 
 ### Hello packet
 
-- guest - `Boolean` that says if you are authenticated with the guest key
-- licenseOwner - `String` that represents who owns the chatbox license
+- guest - `boolean` that says if you are authenticated with the guest key
+- licenseOwner - `string` that represents who owns the chatbox license
 - capabilities - Array of `string`s that can tell you what capabilities you have
 
 ### Playerlist packet
@@ -148,13 +148,13 @@ You are also able to listen after these packets that are sent by SwitchCraft to 
 
 ### Error packet
 
-- error - `String` that tells you what type of error that occoured. You can find possible errors at the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#error-packet).
-- text - `String` that is a human readable version of `error`.
+- error - `string` that tells you what type of error that occoured. You can find possible errors at the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#error-packet).
+- text - `string` that is a human readable version of `error`.
 
 ### Closing packet
 
-- closeReason - `String` reson for closing the connection. You can find possible values at the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#closing-packet).
-- reason - `String` that is a human readable version of `closeReason`
+- closeReason - `string` reson for closing the connection. You can find possible values at the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#closing-packet).
+- reason - `string` that is a human readable version of `closeReason`
 
 ## Methods
 
@@ -225,7 +225,7 @@ Minecraft's serialised [raw JSON text format](https://minecraft.fandom.com/wiki/
 
 ### Mode
 
-The mode to use for outgoing chatbox messages (`.say()`, `.tell()`). 
+The mode to use for outgoing chatbox messages (`.say()`, `.tell()`).
 
 - markdown - Discord-like [Markdown syntax](https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-). Supports URLs, but not colours.
 - format - Minecraft-like [formatting codes](https://minecraft.fandom.com/wiki/Formatting_codes) using ampersands (e.g. `&e` for yellow). Supports colours, but not URLs.

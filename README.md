@@ -30,7 +30,7 @@ const sc = new Client('YOUR-CHATBOX-TOKEN');
 // Add event listener for when a command is fired
 sc.on('command', (cmd) => {
   // Only respond if the command is `\helloworld`
-  if (cmd.command == 'helloworld') {
+  if (cmd.command === 'helloworld') {
     // Send message to the user: "Hello World!"
     sc.tell(cmd.user.name, 'Hello World!');
   }
@@ -47,27 +47,27 @@ console.log('Connected');
 
 You are able to listen after the following events:
 
-| Friendly name     | Name                     | Trigger                                      |
-| ----------------- | ------------------------ | -------------------------------------------- |
-| AFK               | afk                      | When someone goes AFK                        |
-| Return from AFK   | afk_return               | When someone returnes from AFK               |
-| Ingame Chat       | chat_ingame              | When someone sends an ingame chat message    |
-| Discord Chat      | chat_discord             | When someone sends a chat message on Discord |
-| Chatbox Broadcast | chat_chatbox             | When another chatbox broadcasts              |
-| Chatbox command   | command                  | When someone sends a chatbox command         |
-| Death             | death                    | When someone dies ingame                     |
-| Join              | join                     | When someone joines the game                 |
-| Disconnect        | leave                    | When someone leaves the game                 |
-| Restart scheduled | server_restart_scheduled | When a restart gets scheduled                |
-| Restart cancelled | server_restart_cancelled | When a restart gets cancelled                |
+| Friendly name     | Name                     | Trigger                                    |
+| ----------------- | ------------------------ | ------------------------------------------ |
+| AFK               | afk                      | A player went AFK                          |
+| AFK return        | afk_return               | A player returned from being AFK           |
+| In-game chat      | chat_ingame              | A player sent a message in-game            |
+| Discord chat      | chat_discord             | A player sent a message from Discord       |
+| Chatbox message   | chat_chatbox             | A chatbox sent a public message            |
+| Chatbox command   | command                  | A player sent a chatbox command in-game    |
+| Death             | death                    | A player died                              |
+| Join              | join                     | A player joined the server                 |
+| Disconnect        | leave                    | A player left the server                   |
+| Restart scheduled | server_restart_scheduled | The server will restart soon               |
+| Restart cancelled | server_restart_cancelled | The scheduled server restart was cancelled |
 
 ### AFK
 
 - user - `User` that goes AFK
 
-### Return from AFK
+### AFK return
 
-- user - `User` that goes AFK
+- user - `User` that went AFK
 
 ### Ingame Chat
 
@@ -76,38 +76,38 @@ You are able to listen after the following events:
 - renderedText - `RenderedTextObject` of the rendered text of the chat message
 - user - `User` that sent the message
 
-### Discord Chat
+### Discord chat
 
-- text - `String` of the contents of the chat message
-- rawText - `String` of the raw contents of the chat message
+- text - `string` of the contents of the chat message, without formatting codes
+- rawText - `string` of the raw contents of the chat message, with its original formatting codes
 - renderedText - `RenderedTextObject` of the rendered text of the chat message
-- discordId - `String` of the Discord snowflake ID of the message
+- discordId - `string` of the Discord snowflake ID of the message
 - discordUser - `DiscordUser` that sent the message
-- edited - `Boolean` if the message has been edited
+- edited - `boolean` if the message has been edited
 
-### Chatbox Broadcast
+### Chatbox message
 
-- text - `String` of the contents of the broadcast
-- rawText - `String` of the raw contents of the broadcast
-- renderedText - `RenderedTextObject` of the rendered text of the broadcast
-- user - `User` of the owner of the chatbox that broadcasted
-- name - `String` name of the chatbox of the chatbox that broadcasted
-- rawName - Raw `string` name of the chatbox that broadcasted
+- text - `string` of the contents of the message, without formatting codes
+- rawText - `string` of the raw contents of the message, with its original formatting codes
+- renderedText - `RenderedTextObject` of the rendered text of the message
+- user - `User` of the owner of the chatbox
+- name - `string` name of the chatbox, without formatting codes
+- rawName - `string` name of the chatbox, with its original formatting codes
 
-### Chatbox Command
+### Chatbox command
 
 - user - `User` that sent the chatbox command
 - command - The first part of the command they sent. Eg. \\**command** arg1 arg2
 - args - Array of `string`s that contain the args that come after the command
-- ownerOnly - `Boolean` that says if this command was visible to everyone's chatbox, or only the owner
+- ownerOnly - `boolean` if the command is an owner-only command (`^command`)
 
 ### Death
 
-- text - `String` of the death message
-- rawText - Raw `string` of the death message
+- text - `string` of the death message contents, without formatting codes
+- rawText - `string` of the death message contents, with its original formatting codes
 - renderedText - `RenderedTextObject` of the death message
 - user - `User` that died
-- source - `User` | `null` that killed the user. Only sent if they was killed by a player
+- source - `User` | `null` that killed the user. Only set if they were killed by another player
 
 ### Join
 
@@ -131,8 +131,8 @@ You are also able to listen after these packets that are sent by SwitchCraft to 
 
 | Friendly name     | Name    | Trigger                                                   |
 | ----------------- | ------- | --------------------------------------------------------- |
-| Hello packet      | ready   | When switchchat has successfully connected to SwitchCraft |
-| Playerlist packet | players | When you connect, and when a player joines/leaves         |
+| Hello packet      | ready   | When SwitchChat has successfully connected to SwitchCraft |
+| Playerlist packet | players | When you connect, and when a player joins/leaves          |
 | Error packet      | error   | When there is an error                                    |
 | Closing packet    | closing | When the server is closing the connection                 |
 
@@ -148,12 +148,12 @@ You are also able to listen after these packets that are sent by SwitchCraft to 
 
 ### Error packet
 
-- error - `String` that tells you what type of error that occoured. You can find possible errors at the [SwitchCraft wiki](https://docs.sc3.io/chatbox/websocket.html#error-packet)
+- error - `String` that tells you what type of error that occoured. You can find possible errors at the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#error-packet).
 - text - `String` that is a human readable version of `error`.
 
 ### Closing packet
 
-- closeReason - `String` reson for closing the connection. You can find possible values at the [SwitchCraft wiki](https://docs.sc3.io/chatbox/websocket.html#closing-packet)
+- closeReason - `String` reson for closing the connection. You can find possible values at the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#closing-packet).
 - reason - `String` that is a human readable version of `closeReason`
 
 ## Methods
@@ -212,18 +212,20 @@ Reconnects to SwitchCraft
 
 ### Discord User
 
-- id - The discord snowflake ID of the user
-- name - The discord name of the user
-- displayName - The displayname of the user
-- discriminator - The four numbers that identify this user from all the other with the same name
+- id - The Discord snowflake ID of the user
+- name - The Discord name of the user
+- displayName - The user's server nickname on Discord, or their username if it is not set
+- discriminator - The user's discriminator on Discord
 - avatar - URL to the avatar of the user
 - roles - Array consisting of roles.
 
 ### Rendered Text Object
 
-Weird JSON object that minecraft uses for rendering.
+Minecraft's serialised [raw JSON text format](https://minecraft.fandom.com/wiki/Raw_JSON_text_format). See the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#raw-json-text-object) for more information on how this is used.
 
 ### Mode
 
-- markdown - To use markdown as formatting for outgoing chatbox messages
-- format - To use minecraft formatting for outgoing chatbox messages
+The mode to use for outgoing chatbox messages (`.say()`, `.tell()`). 
+
+- markdown - Discord-like [Markdown syntax](https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-). Supports URLs, but not colours.
+- format - Minecraft-like [formatting codes](https://minecraft.fandom.com/wiki/Formatting_codes) using ampersands (e.g. `&e` for yellow). Supports colours, but not URLs.

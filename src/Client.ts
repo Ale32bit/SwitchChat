@@ -2,28 +2,11 @@ import * as events from "events";
 import * as constants from "./constants";
 import WebSocket from "ws";
 
-import {Data} from "./packets/Data";
-import {Hello} from "./packets/Hello";
-import {User} from "./types/User";
-import {Players} from "./packets/Players";
-import {BaseEvent} from "./events/BaseEvent";
-import {IngameChatMessage} from "./events/IngameChatMessage";
-import {DiscordChatMessage} from "./events/DiscordChatMessage";
-import {ChatboxChatMessage} from "./events/ChatboxChatMessage";
-import {ChatboxCommand} from "./events/ChatboxCommand";
-import {Join} from "./events/Join";
-import {Leave} from "./events/Leave";
-import {Death} from "./events/Death";
-import {AFK} from "./events/AFK";
-import {AFKReturn} from "./events/AFKReturn";
-import {QueueMessage} from "./types/QueueMessage";
-import {Success} from "./packets/Success";
-import {Error} from "./packets/Error";
-import {Closing} from "./packets/Closing";
-import {Capability} from "./types/Capabilities";
-import {ServerRestartScheduled} from "./events/ServerRestartScheduled";
-import {ServerRestartCancelled} from "./events/ServerRestartCancelled";
-import {FormattingMode} from "./types";
+import { Capability, FormattingMode, User } from "./types";
+import { Data, Hello, Players, Success, Error, Closing } from "./packets";
+import { ChatboxChatMessage, ChatboxCommand, DiscordChatMessage, IngameChatMessage, Leave, Join, Death, AFKReturn, AFK,
+    ServerRestartCancelled, ServerRestartScheduled, BaseEvent } from "./events";
+import { QueueMessage } from "./types/QueueMessage";
 
 export declare interface Client {
     /**

@@ -1,5 +1,5 @@
 import {Data} from "./Data";
-import {User} from "../types/User";
+import {User} from "../types";
 
 export interface Players extends Data {
     time: string;

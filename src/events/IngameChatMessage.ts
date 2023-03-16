@@ -1,6 +1,5 @@
 import {BaseEvent} from "./BaseEvent";
-import {RenderedTextObject} from "../types/RenderedTextObject";
-import {User} from "../types/User";
+import {User, RenderedTextObject} from "../types";
 
 /** The event received when a player posts a message in public chat. */
 export interface IngameChatMessage extends BaseEvent {

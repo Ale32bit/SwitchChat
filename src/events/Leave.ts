@@ -1,5 +1,5 @@
 import {BaseEvent} from "./BaseEvent";
-import {User} from "../types/User";
+import {User} from "../types";
 
 /** The event received when a player leaves the game. */
 export interface Leave extends BaseEvent {

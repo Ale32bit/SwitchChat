@@ -1,6 +1,5 @@
 import {BaseEvent} from "./BaseEvent";
-import {RenderedTextObject} from "../types/RenderedTextObject";
-import {DiscordUser} from "../types/DiscordUser";
+import {DiscordUser, RenderedTextObject} from "../types";
 
 /** The event received when a player posts a message in Discord. */
 export interface DiscordChatMessage extends BaseEvent {

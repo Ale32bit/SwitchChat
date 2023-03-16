@@ -1,4 +1,4 @@
-import {Data} from "../packets/Data";
+import {Data} from "../packets";
 
 export interface BaseEvent extends Data {
     id: number;

@@ -1,6 +1,5 @@
 import {BaseEvent} from "./BaseEvent";
-import {User} from "../types/User";
-import {RenderedTextObject} from "../types/RenderedTextObject";
+import {User, RenderedTextObject} from "../types";
 
 /** The event received when a player dies in-game. */
 export interface Death extends BaseEvent {

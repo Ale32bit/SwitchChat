@@ -1,5 +1,5 @@
 import {BaseEvent} from "./BaseEvent";
-import {User} from "../types/User";
+import {User} from "../types";
 
 /** The event received when a player runs a chatbox command (public backslash commands: `\command`, private owner-only 
  * caret/pipe commands: `^command`) in-game. The `command` capability is required to receive command events. */

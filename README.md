@@ -1,75 +1,93 @@
 # SwitchChat v3
 
-SwitchCraft Chatbox v2 module for Node.js written in TypeScript
+[SwitchCraft Chatbox](https://docs.sc3.io/chatbox/) v2 module for Node.js written in TypeScript
 
 [![npm version](https://badge.fury.io/js/switchchat.svg)](https://www.npmjs.org/package/switchchat)
 
 ## Installation
 
-```terminal
-npm i --save switchchat
+```sh
+npm i switchchat
 ```
 
-## Example
+## Documentation
 
-See [SwitchCraft Chatbox docs](https://docs.sc3.io/chatbox/) for more information regarding chatbox.
+In-depth documentation can be found at [docs.sc3.io](https://docs.sc3.io/chatbox/):
 
-To show you how to use the switchchat we will be building an helllo world bot.
+- [Library documentation](https://docs.sc3.io/chatbox/switchchat.html)
+- [API reference](https://docs.sc3.io/library/switchchat/)
+- [Chatbox websocket API documentation](https://docs.sc3.io/chatbox/websocket.html)
 
-1. Start by logging onto SwitchCraft and grabbing your token by running `/chatbox license`. Pro tip: You can click the token to copy it to your clipboard
-2. Open up a new JavaScript or TypeScript file, setup npm with `npm init -y`, and then install switchchat by running `npm i switchchat`. To make sure ESM modules are used, go in package.jseon and set `"type": "module"`.
-3. In your program paste the following code in.
+## Example usage
+
+This example will show you how to connect to the SwitchCraft Chatbox API with a basic Hello World bot.
+
+1. Obtain a Chatbox token by running `/chatbox license` [in-game](https://sc3.io). You can click the token to copy it to 
+   your clipboard.
+2. Set up your project with `npm init`, and install SwitchChat by running `npm i switchchat`. 
+   - To make sure ESM modules are used, open `package.json` and set `"type": "module"`.
+3. Create a file called `index.js` with the following code:
 
 ```ts
-// Import switchchat
-import { Client } from 'switchchat';
+// Import SwitchChat
+import { Client } from "switchchat";
 
-// Create the client
-const sc = new Client('YOUR-CHATBOX-TOKEN');
+// Create the Chatbox client
+const sc = new Client("YOUR-CHATBOX-TOKEN");
 
-// Add event listener for when a command is fired
-sc.on('command', (cmd) => {
+// Optional - set the default name and markdown formatting mode for all `.say()` and `.tell()` calls
+sc.defaultName = "Hello World Bot";
+sc.defaultFormattingMode = "markdown";
+
+// Add event listener for when a backslash command is received
+sc.on("command", async (cmd) => {
   // Only respond if the command is `\helloworld`
-  if (cmd.command === 'helloworld') {
-    // Send message to the user: "Hello World!"
-    sc.tell(cmd.user.name, 'Hello World!');
+  if (cmd.command === "helloworld") {
+    // Send message back to the user: "Hello World!"
+    await sc.tell(cmd.user.name, "Hello World!");
   }
 });
 
-// Connect
+// Event listener for when the client is connected to SwitchCraft and ready to
+// receive messages and events
+sc.on("ready", () => {
+  console.log("Connected!");
+});
+
+// Connect to SwitchCraft
 sc.connect();
-console.log('Connected');
 ```
 
-4. Run your code! If you used JavaScript you can run it with `node yourfile.js`. When it says it is connected, go on SwitchCraft and run `\helloworld`. It should the respond to you!
+4. Run your code! If you used JavaScript you can run it with `node index.js`. When it says "Connected!", run 
+  `\helloworld` in-game, and the Chatbox should respond to you!
 
 ## Events
 
-You are able to listen after the following events:
+You are able to listen after the following events, which directly map to the events sent by the 
+[Chatbox websocket API](https://docs.sc3.io/chatbox/websocket.html):
 
-| Friendly name     | Name                     | Trigger                                    |
-| ----------------- | ------------------------ | ------------------------------------------ |
-| AFK               | afk                      | A player went AFK                          |
-| AFK return        | afk_return               | A player returned from being AFK           |
-| In-game chat      | chat_ingame              | A player sent a message in-game            |
-| Discord chat      | chat_discord             | A player sent a message from Discord       |
-| Chatbox message   | chat_chatbox             | A chatbox sent a public message            |
-| Chatbox command   | command                  | A player sent a chatbox command in-game    |
-| Death             | death                    | A player died                              |
-| Join              | join                     | A player joined the server                 |
-| Disconnect        | leave                    | A player left the server                   |
-| Restart scheduled | server_restart_scheduled | The server will restart soon               |
-| Restart cancelled | server_restart_cancelled | The scheduled server restart was cancelled |
-
-### AFK
-
-- user - `User` that goes AFK
-
-### AFK return
+| Friendly name     | Name                       | Trigger                                    |
+|-------------------|----------------------------|--------------------------------------------|
+| In-game chat      | `chat_ingame`              | A player sent a message in-game            |
+| Discord chat      | `chat_discord`             | A player sent a message from Discord       |
+| Chatbox message   | `chat_chatbox`             | A chatbox sent a public message            |
+| Chatbox command   | `command`                  | A player sent a chatbox command in-game    |
+| Join              | `join`                     | A player joined the server                 |
+| Leave             | `leave`                    | A player left the server                   |
+| Death             | `death`                    | A player died                              |
+| AFK               | `afk`                      | A player went AFK                          |
+| AFK return        | `afk_return`               | A player returned from being AFK           |
+| Restart scheduled | `server_restart_scheduled` | The server will restart soon               |
+| Restart cancelled | `server_restart_cancelled` | The scheduled server restart was cancelled |
 
 - user - `User` that went AFK
 
-### Ingame Chat
+### In-game chat
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#in-game-chat-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/IngameChatMessage.html))
+
+The event received when a player posts a message in public chat.
 
 - text - `string` of the contents of the chat message
 - rawText - `string` of the raw contents of the chat message
@@ -77,6 +95,11 @@ You are able to listen after the following events:
 - user - `User` that sent the message
 
 ### Discord chat
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#discord-chat-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/DiscordChatMessage.html))
+
+The event received when a player posts a message in Discord.
 
 - text - `string` of the contents of the chat message, without formatting codes
 - rawText - `string` of the raw contents of the chat message, with its original formatting codes
@@ -87,6 +110,11 @@ You are able to listen after the following events:
 
 ### Chatbox message
 
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#chatbox-chat-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/ChatboxChatMessage.html))
+
+The event received when another chatbox sends a message.
+
 - text - `string` of the contents of the message, without formatting codes
 - rawText - `string` of the raw contents of the message, with its original formatting codes
 - renderedText - `RenderedTextObject` of the rendered text of the message
@@ -96,12 +124,42 @@ You are able to listen after the following events:
 
 ### Chatbox command
 
-- user - `User` that sent the chatbox command
-- command - The first part of the command they sent. Eg. \\**command** arg1 arg2
-- args - Array of `string`s that contain the args that come after the command
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#command-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/ChatboxCommand.html))
+
+The event received when a player runs a chatbox command (public backslash commands: `\command`, private owner-only 
+caret/pipe commands: `^command`) in-game. The `command` capability is required to receive command events.
+
+- user - `User` that ran the chatbox command
+- command - The name of the command (the word immediately following the backslash/caret/pipe, excluding the 
+  backslash/caret/pipe). Example: \\**command** arg1 arg2
+- args - Array of space-separated `string` arguments after the command.
 - ownerOnly - `boolean` if the command is an owner-only command (`^command`)
 
+### Join
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#join-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/Join.html))
+
+The event received when a player joins the game.
+
+- user - `User` that joined the server
+
+### Leave
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#leave-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/Leave.html))
+
+The event received when a player leaves the game.
+
+- user - `User` that left the server
+
 ### Death
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#death-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/Death.html))
+
+The event received when a player dies in-game.
 
 - text - `string` of the death message contents, without formatting codes
 - rawText - `string` of the death message contents, with its original formatting codes
@@ -109,121 +167,207 @@ You are able to listen after the following events:
 - user - `User` that died
 - source - `User` | `null` that killed the user. Only set if they were killed by another player
 
-### Join
+### AFK
 
-- user - `User` that joined the server
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#afk-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/AFK.html))
 
-### Disconnect
+The event received when a player goes AFK in-game.
 
-- user - `User` that left the server
+- user - `User` that goes AFK
+
+### AFK return
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#afk-return-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/AFKReturn.html))
+
+The event received when a player returns from being AFK in-game.
 
 ### Server restart scheduled
 
-Not fully implemented
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#server-restart-scheduled-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/ServerRestartScheduled.html))
+
+The event received when a server restart has been scheduled. At the time of `restartAt`, the server will restart and the 
+SwitchChat client will be disconnected.
+
+If a server restart was scheduled before the websocket connected, then the `server_restart_scheduled` event will be
+sent after the `hello`/`ready` events. In this case, `restartSeconds` will not be the time until the restart, but 
+instead the time that was initially specified for the restart. `time` will still be the initial time the restart was 
+scheduled, and `restartAt` will be the time the restart will happen.
+
+- restartType - `string` that tells you what type of restart it is (`"automatic"` or `"manual"`)
+- restartSeconds - `number` that tells you how many seconds until the restart
+- restartAt - `Date` that tells you when the restart will happen
 
 ### Server restart cancelled
 
-Not fully implemented
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#server-restart-cancelled-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/ServerRestartCancelled.html))
+
+The event received when a previously scheduled server restart has now been cancelled.
+
+- restartType - `string` that tells you what type of restart it was (`"automatic"` or `"manual"`)
 
 ## Server -> Client packets
 
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#server-to-client-packets))
+
 You are also able to listen after these packets that are sent by SwitchCraft to the client.
 
-| Friendly name     | Name    | Trigger                                                   |
-| ----------------- | ------- | --------------------------------------------------------- |
-| Hello packet      | ready   | When SwitchChat has successfully connected to SwitchCraft |
-| Playerlist packet | players | When you connect, and when a player joins/leaves          |
-| Error packet      | error   | When there is an error                                    |
-| Closing packet    | closing | When the server is closing the connection                 |
+| Friendly name      | Name      | Trigger                                                   |
+|--------------------|-----------|-----------------------------------------------------------|
+| Hello packet       | `ready`   | When SwitchChat has successfully connected to SwitchCraft |
+| Player list packet | `players` | When you connect, and when a player joins/leaves          |
+| Error packet       | `error`   | When there is an error                                    |
+| Closing packet     | `closing` | When the server is closing the connection                 |
 
 ### Hello packet
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#hello-packet) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/Hello.html))
 
 - guest - `boolean` that says if you are authenticated with the guest key
 - licenseOwner - `string` that represents who owns the chatbox license
 - capabilities - Array of `string`s that can tell you what capabilities you have
 
-### Playerlist packet
+### Players packet
 
-- players - Array of `User`s.
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#players-packet) &ndash; 
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/Players.html))
+
+- players - Array of `User`s that are currently online on the server.
 
 ### Error packet
 
-- error - `string` that tells you what type of error that occoured. You can find possible errors at the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#error-packet).
-- text - `string` that is a human readable version of `error`.
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#error-packet) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/Error.html))
+
+- error - `string` that tells you what type of error that occurred ([possible errors](https://docs.sc3.io/chatbox/websocket.html#error-packet)).
+- text - `string` that is a human-readable version of `error`.
 
 ### Closing packet
 
-- closeReason - `string` reson for closing the connection. You can find possible values at the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#closing-packet).
-- reason - `string` that is a human readable version of `closeReason`
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#closing-packet) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/Closing.html))
+
+- closeReason - `string` reason for closing the connection ([possible values](https://docs.sc3.io/chatbox/websocket.html#closing-packet)).
+- reason - `string` that is a human-readable version of `closeReason`
 
 ## Methods
 
-You can run these methods on your client instance.
+You can run these methods on your [`Client`](https://docs.sc3.io/library/switchchat/classes/Client.html) instance.
 
-### tell
+### client.say
 
-Syntax: `await client.tell(username, text, name, mode)`
-Sends a message to a player.
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#say-packet) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/classes/Client.html#say))
 
-| Argument | Type   | Description                                              |
-| -------- | ------ | -------------------------------------------------------- |
-| username | string | The username of the player you want to send a message to |
-| text     | string | The text contents you want to send                       |
-| name     | string | The name of your chatbox                                 |
-| mode     | Mode   | The formatting mode                                      |
+- Syntax: `await client.say(text, name, mode)`
+- Returns: Promise<[Success](https://docs.sc3.io/library/switchchat/interfaces/Success.html)>
 
-### say
+Sends a message to the in-game public chat. Returns a Promise that resolves to a
+[Success](https://docs.sc3.io/library/switchchat/interfaces/Success.html) object, which will tell you if the message
+was sent (`reason` is `"message_sent"`) or queued (`reason` is `"message_queued"`).
 
-Syntax: `await client.say(text, name, mode)`
-This method broadcasts the text to all online players.
+| Argument | Type                | Description                                                                                                                              |
+|----------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `text`   | `string`            | The message to send.                                                                                                                     |
+| `name`   | `string` (optional) | The name of the chatbox to show. If no name is specified, it will default to the username of the license owner, or `client.defaultName`. |
+| `mode`   | `Mode` (optional)   | The formatting mode to use (`"markdown"` or `"format"`). Defaults to `client.defaultFormattingMode` or `"markdown"`.                     |
 
-| Argument | Type   | Description               |
-| -------- | ------ | ------------------------- |
-| text     | string | The text you want to send |
-| name     | string | The name of your chatbox  |
-| mode     | Mode   | The formatting mode       |
+### client.tell
 
-### connect
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#tell-packet) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/classes/Client.html#tell))
 
-Syntax: `client.connect()`
-Connects to SwitchCraft
+- Syntax: `await client.tell(user, text, name, mode)`
+- Returns: Promise<[Success](https://docs.sc3.io/library/switchchat/interfaces/Success.html)>
 
-### close
+Sends a private message to an in-game player. Returns a Promise that resolves to a 
+[Success](https://docs.sc3.io/library/switchchat/interfaces/Success.html) object, which will tell you if the message
+was sent (`reason` is `"message_sent"`) or queued (`reason` is `"message_queued"`).
 
-Syntax: `client.close()`
-Disconnects the connection to SwitchCraft
+| Argument | Type                | Description                                                                                                                              |
+|----------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `user`   | `string`            | The username or UUID of the user to send the message to.                                                                                 |
+| `text`   | `string`            | The message to send.                                                                                                                     |
+| `name`   | `string` (optional) | The name of the chatbox to show. If no name is specified, it will default to the username of the license owner, or `client.defaultName`. |
+| `mode`   | `Mode` (optional)   | The formatting mode to use (`"markdown"` or `"format"`). Defaults to `client.defaultFormattingMode` or `"markdown"`.                     |
 
-### reconnect
 
-Syntax: `client.reconnect()`
-Reconnects to SwitchCraft
+### client.connect
+
+([API reference](https://docs.sc3.io/library/switchchat/classes/Client.html#connect))
+
+- Syntax: `client.connect()`
+
+Connects to SwitchCraft.
+
+### client.close
+
+([API reference](https://docs.sc3.io/library/switchchat/classes/Client.html#close))
+
+- Syntax: `client.close()`
+
+Disconnects the connection to SwitchCraft.
+
+### client.reconnect
+
+([API reference](https://docs.sc3.io/library/switchchat/classes/Client.html#reconnect))
+
+- Syntax: `client.reconnect()`
+
+Reconnects to SwitchCraft.
 
 ## Data types
 
-### User
+### User object
 
-- name - The minecraft name without prefixes similar
-- uuid - The minecraft UUID of the player
-- displayName - The name as it appears in chat
-- group - The group the player is in. `default`, `moderator` or `admin`
-- pronouns - Not yet implemented in SwitchChat v3
-- world - The world the player is in. Either the full name like `minecraft:nether` or null
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#user-object) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/User.html))
+
+The user object represents an in-game player.
+
+- name - The Minecraft username of the player.
+- uuid - The Minecraft UUID of the player, with hyphens.
+- displayName - The user's name as it appears in chat. May differ from `name`.
+- group - The rank of the player, usually `"default"`, `"moderator"` or `"admin"`.
+- pronouns - The [pronouns](https://docs.sc3.io/faq/pronouns.html) set by the user by running `/pronouns`. This may be 
+  `null` if the player has not set any preferred pronouns. Where reasonably possible, you should attempt to use the
+  user's preferred pronouns, or avoid using pronouns entirely. If you are unable to do this, you should use the player's
+  name instead.
+- world - The world the player is in, or `null` if this information is not available. It will be a Minecraft namespaced 
+  registry key, for example:
+  - `minecraft:overworld` - The overworld
+  - `minecraft:the_nether` - The Nether
+  - `minecraft:the_end` - The End
 - afk - If the player is AFK
 
-### Discord User
+### DiscordUser object
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#user-object) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/DiscordUser.html))
+
+The Discord user object represents a user on Discord.
 
 - id - The Discord snowflake ID of the user
 - name - The Discord name of the user
 - displayName - The user's server nickname on Discord, or their username if it is not set
 - discriminator - The user's discriminator on Discord
 - avatar - URL to the avatar of the user
-- roles - Array consisting of roles.
+- roles - Array consisting of [roles](https://docs.sc3.io/library/switchchat/interfaces/DiscordRole.html).
 
-### Rendered Text Object
+### RenderedTextObject
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#raw-json-text-object) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/RenderedTextObject.html))
 
 Minecraft's serialised [raw JSON text format](https://minecraft.fandom.com/wiki/Raw_JSON_text_format). See the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#raw-json-text-object) for more information on how this is used.
 
 ### Mode
+
+([API reference](https://docs.sc3.io/library/switchchat/types/FormattingMode.html))
 
 The mode to use for outgoing chatbox messages (`.say()`, `.tell()`).
 

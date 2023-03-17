@@ -365,7 +365,7 @@ The Discord user object represents a user on Discord.
 
 Minecraft's serialised [raw JSON text format](https://minecraft.fandom.com/wiki/Raw_JSON_text_format). See the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#raw-json-text-object) for more information on how this is used.
 
-### Mode
+### FormattingMode
 
 ([API reference](https://docs.sc3.io/library/switchchat/types/FormattingMode.html))
 

@@ -268,7 +268,7 @@ You can run these methods on your [`Client`](https://docs.sc3.io/library/switchc
 
 Sends a message to the in-game public chat. Returns a Promise that resolves to a
 [Success](https://docs.sc3.io/library/switchchat/interfaces/Success.html) object, which will tell you if the message
-was sent (`reason` is `"message_sent"`) or queued (`reason` is `"message_queued"`).
+was sent (`reason` is `"message_sent"`).
 
 | Argument | Type                | Description                                                                                                                              |
 |----------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------|
@@ -286,7 +286,7 @@ was sent (`reason` is `"message_sent"`) or queued (`reason` is `"message_queued"
 
 Sends a private message to an in-game player. Returns a Promise that resolves to a 
 [Success](https://docs.sc3.io/library/switchchat/interfaces/Success.html) object, which will tell you if the message
-was sent (`reason` is `"message_sent"`) or queued (`reason` is `"message_queued"`).
+was sent (`reason` is `"message_sent"`).
 
 | Argument | Type                | Description                                                                                                                              |
 |----------|---------------------|------------------------------------------------------------------------------------------------------------------------------------------|

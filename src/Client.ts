@@ -72,7 +72,7 @@ export declare interface Client {
      * 
      *   If no mode is specified, it will default to the mode specified in the constructor.
      * 
-     * @returns A {@link Success} object containing whether the message was sent or queued.
+     * @returns A {@link Success} object containing if the message was sent.
      */
     say(text: string, name?: string, mode?: FormattingMode): Promise<Success>;
 
@@ -91,7 +91,7 @@ export declare interface Client {
      * 
      *   If no mode is specified, it will default to the mode specified in the constructor.
      * 
-     * @returns A {@link Success} object containing whether the message was sent or queued.
+     * @returns A {@link Success} object containing if the message was sent.
      */
     tell(user: string, text: string, name?: string, mode?: FormattingMode): Promise<Success>;
 

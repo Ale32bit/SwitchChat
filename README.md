@@ -209,6 +209,16 @@ The event received when a previously scheduled server restart has now been cance
 
 - restartType - `string` that tells you what type of restart it was (`"automatic"` or `"manual"`)
 
+## Rate limits
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#rate-limits))
+
+The Chatbox server has a ratelimit of 500ms per license, with up to 5 messages queued at once.
+
+When the methods `client.say` and `client.tell` are called, the data is enqueued internally before being sent to the server.
+
+This internal queue makes it safe to go well over the limits, because it processes each message every 500ms to avoid hitting the rate limit of the server.
+
 ## Server -> Client packets
 
 ([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#server-to-client-packets))

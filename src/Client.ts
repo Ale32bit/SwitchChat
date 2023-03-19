@@ -106,6 +106,8 @@ export declare interface Client {
 
     on(event: "raw", listener: (rawData: { [key: string]: any }) => void): this;
 
+    on(event: "ws_error", listener: (err: Error) => void): this;
+
     // =========================================================================
     // Server events
     // =========================================================================
@@ -266,6 +268,7 @@ export class Client extends events.EventEmitter {
 
     public connect(callback?: (client?: Client) => void) {
         this._ws = new WebSocket(this.endpoint + this._token);
+        this._ws.on("error", (err) => this.emit("ws_error", err));
         this._ws.on("message", this._onMessage.bind(this));
 
         if (callback) {

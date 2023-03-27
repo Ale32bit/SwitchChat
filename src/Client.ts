@@ -53,8 +53,9 @@ export declare interface Client {
 
     /**
      * Close the connection to the Chatbox server
+     * @param soft Keep running status as is
      */
-    close(): void;
+    close(soft?: boolean): void;
 
     /**
      * Close and reconnect to the Chatbox server
@@ -287,8 +288,10 @@ export class Client extends events.EventEmitter {
         }
     }
 
-    public close() {
-        this.running = false;
+    public close(soft?: boolean) {
+        if(!soft) {
+            this.running = false;
+        }
         clearInterval(this._queueInterval);
         if (this._ws && (this._ws.readyState === this._ws.OPEN || this._ws.readyState === this._ws.CONNECTING)) {
             this._ws.close();
@@ -296,7 +299,7 @@ export class Client extends events.EventEmitter {
     }
 
     public reconnect(wait: boolean = false) {
-        this.close();
+        this.close(true);
 
         setTimeout(this.connect.bind(this), wait ? this.waitTimeRestart : 0);
     }

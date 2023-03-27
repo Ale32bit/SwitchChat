@@ -2,11 +2,13 @@ import * as events from "events";
 import * as constants from "./constants";
 import WebSocket from "ws";
 
-import { Capability, FormattingMode, User } from "./types";
-import { Data, Hello, Players, Success, Error, Closing } from "./packets";
-import { ChatboxChatMessage, ChatboxCommand, DiscordChatMessage, IngameChatMessage, Leave, Join, Death, AFKReturn, AFK,
-    ServerRestartCancelled, ServerRestartScheduled, BaseEvent } from "./events";
-import { QueueMessage } from "./types/QueueMessage";
+import {Capability, FormattingMode, User} from "./types";
+import {Data, Hello, Players, Success, Error, Closing} from "./packets";
+import {
+    ChatboxChatMessage, ChatboxCommand, DiscordChatMessage, IngameChatMessage, Leave, Join, Death, AFKReturn, AFK,
+    ServerRestartCancelled, ServerRestartScheduled, BaseEvent
+} from "./events";
+import {QueueMessage} from "./types/QueueMessage";
 
 export declare interface Client {
     /**
@@ -16,7 +18,7 @@ export declare interface Client {
 
     /**
      * List of capabilities this chatbox license can do. Typically, guest connections can only use `read`. Connections
-     * with a license will usually have `read`, `command` and `tell`. 
+     * with a license will usually have `read`, `command` and `tell`.
      */
     capabilities: Capability[];
 
@@ -34,12 +36,14 @@ export declare interface Client {
      * Default name for chatbox messages
      */
     defaultName: string | undefined;
-    
+
     /**
      * Default formatting mode for say and tell messages.
      * Defaults to "markdown"
      */
     defaultFormattingMode: FormattingMode;
+
+    running: boolean;
 
     /**
      * Connect to the Chatbox server
@@ -60,37 +64,37 @@ export declare interface Client {
 
     /**
      * Sends a message to the in-game public chat.
-     * 
+     *
      * @param text The message to send.
-     * @param name The name of the chatbox to show. If no name is specified, it will default to the username of the 
+     * @param name The name of the chatbox to show. If no name is specified, it will default to the username of the
      *             license owner.
      * @param mode The formatting mode to use. You can use these formatting modes:
      *   - `markdown` - Discord-like [Markdown syntax](https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-).
      *      Supports URLs, but not colours.
-     *   - `format` - Minecraft-like [formatting codes](https://minecraft.fandom.com/wiki/Formatting_codes) using 
+     *   - `format` - Minecraft-like [formatting codes](https://minecraft.fandom.com/wiki/Formatting_codes) using
      *      ampersands (e.g. `&e` for yellow). Supports colours, but not URLs.
-     * 
+     *
      *   If no mode is specified, it will default to the mode specified in the constructor.
-     * 
+     *
      * @returns A {@link Success} object containing if the message was sent.
      */
     say(text: string, name?: string, mode?: FormattingMode): Promise<Success>;
 
     /**
      * Sends a private message to an in-game player.
-     * 
-     * @param user The username or UUID of the user to send the message to. 
+     *
+     * @param user The username or UUID of the user to send the message to.
      * @param text The message to send.
-     * @param name The name of the chatbox to show. If no name is specified, it will default to the username of the 
+     * @param name The name of the chatbox to show. If no name is specified, it will default to the username of the
      *             license owner.
      * @param mode The formatting mode to use. You can use these formatting modes:
      *   - `markdown` - Discord-like [Markdown syntax](https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-).
      *      Supports URLs, but not colours.
-     *   - `format` - Minecraft-like [formatting codes](https://minecraft.fandom.com/wiki/Formatting_codes) using 
+     *   - `format` - Minecraft-like [formatting codes](https://minecraft.fandom.com/wiki/Formatting_codes) using
      *      ampersands (e.g. `&e` for yellow). Supports colours, but not URLs.
-     * 
+     *
      *   If no mode is specified, it will default to the mode specified in the constructor.
-     * 
+     *
      * @returns A {@link Success} object containing if the message was sent.
      */
     tell(user: string, text: string, name?: string, mode?: FormattingMode): Promise<Success>;
@@ -112,77 +116,77 @@ export declare interface Client {
     // Server events
     // =========================================================================
 
-    /** 
-     * The event received when a player posts a message in public chat. The `read` capability is required to receive 
+    /**
+     * The event received when a player posts a message in public chat. The `read` capability is required to receive
      * chat events.
      * @event
      */
     on(event: "chat_ingame", listener: (message: IngameChatMessage) => void): this;
 
-    /** 
+    /**
      * The event received when a player posts a message in Discord. The `read` capability is required to receive chat
-     * events. 
+     * events.
      * @event
      */
     on(event: "chat_discord", listener: (message: DiscordChatMessage) => void): this;
 
-    /** 
+    /**
      * The event received when another chatbox sends a message. The `read` capability is required to receive chat
      * events.
      * @event
      */
     on(event: "chat_chatbox", listener: (message: ChatboxChatMessage) => void): this;
 
-    /** 
-     * The event received when a player runs a chatbox command (public backslash commands: `\command`, private 
-     * owner-only caret/pipe commands: `^command`) in-game. The `command` capability is required to receive command 
+    /**
+     * The event received when a player runs a chatbox command (public backslash commands: `\command`, private
+     * owner-only caret/pipe commands: `^command`) in-game. The `command` capability is required to receive command
      * events.
      * @event
      */
     on(event: "command", listener: (command: ChatboxCommand) => void): this;
 
-    /** 
+    /**
      * The event received when a player joins the game.
      * @event
      */
     on(event: "join", listener: (join: Join) => void): this;
 
-    /** 
+    /**
      * The event received when a player leaves the game.
      * @event
      */
     on(event: "leave", listener: (leave: Leave) => void): this;
 
-    /** 
+    /**
      * The event received when a player dies in-game.
      * @event
      */
     on(event: "death", listener: (death: Death) => void): this;
 
-    /** 
+    /**
      * The event received when a player goes AFK in-game.
      * @event
      */
     on(event: "afk", listener: (afk: AFK) => void): this;
 
-    /** 
+    /**
      * The event received when a player returns from being AFK in-game.
      * @event
      */
     on(event: "afk_return", listener: (afkReturn: AFKReturn) => void): this;
 
-    /** 
-     * The event received when a server restart has been scheduled. At the time of `restartAt`, the server will restart 
-     * and the websocket will be disconnected. 
-     * 
+    /**
+     * The event received when a server restart has been scheduled. At the time of `restartAt`, the server will restart
+     * and the websocket will be disconnected.
+     *
      * @see https://docs.sc3.io/chatbox/websocket.html#server-restart-scheduled-event
      * @event
      */
     on(event: "server_restart_scheduled", listener: (event: ServerRestartScheduled) => void): this;
 
-    /** 
+    /**
      * The event received when a previously scheduled server restart has now been cancelled.
-     * 
+     *
      * @see https://docs.sc3.io/chatbox/websocket.html#server-restart-cancelled-event
      * @event
      */
@@ -197,6 +201,7 @@ export class Client extends events.EventEmitter {
     defaultName: string | undefined;
     defaultFormattingMode: FormattingMode = "markdown";
     waitTimeRestart: number = 60000;
+    running: boolean = false;
     private _delay: number = 500;
     private readonly _queue: QueueMessage[] = [];
     private readonly _awaitingQueue: { [key: number]: QueueMessage } = {};
@@ -212,7 +217,7 @@ export class Client extends events.EventEmitter {
 
         this._token = token;
 
-        this.on("afk",        e => this.updatePlayer(e.user));
+        this.on("afk", e => this.updatePlayer(e.user));
         this.on("afk_return", e => this.updatePlayer(e.user));
     }
 
@@ -268,6 +273,12 @@ export class Client extends events.EventEmitter {
 
     public connect(callback?: (client?: Client) => void) {
         this._ws = new WebSocket(this.endpoint + this._token);
+        this._ws.on("close", (code, reason) => {
+            if (this.running) {
+                clearInterval(this._queueInterval);
+                this.reconnect(true);
+            }
+        });
         this._ws.on("error", (err) => this.emit("ws_error", err));
         this._ws.on("message", this._onMessage.bind(this));
 
@@ -277,6 +288,7 @@ export class Client extends events.EventEmitter {
     }
 
     public close() {
+        this.running = false;
         clearInterval(this._queueInterval);
         if (this._ws && (this._ws.readyState === this._ws.OPEN || this._ws.readyState === this._ws.CONNECTING)) {
             this._ws.close();
@@ -301,6 +313,8 @@ export class Client extends events.EventEmitter {
         switch (data.type) {
             case "hello":
                 let hello = data as Hello;
+
+                this.running = true;
 
                 this.owner = hello.licenseOwner;
                 this.capabilities = hello.capabilities as Capability[];
@@ -335,7 +349,7 @@ export class Client extends events.EventEmitter {
                 }
 
                 break;
-                
+
             case "success":
                 let success = data as Success;
                 let promise = this._awaitingQueue[success.id];
@@ -350,8 +364,8 @@ export class Client extends events.EventEmitter {
                 let closing = data as Closing;
                 this.emit("closing", closing);
                 // server is shutting down, and we need to restart the connection
-                if (closing.closeReason === "server_stopping") {
-                    this.reconnect(true);
+                if (closing.closeReason !== "server_stopping") {
+                    this.running = false;
                 }
         }
     }

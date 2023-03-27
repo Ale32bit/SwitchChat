@@ -37,4 +37,17 @@ export interface User {
 
     /** Whether the player is currently AFK. */
     afk?: boolean;
+
+    /** Whether the player is an alt account. */
+    alt: boolean;
+
+    /** Whether the player is a bot account. */
+    bot: boolean;
+
+    /**
+     * The current public tier of the player's supporter status. This will be `0` if the player is not a supporter or
+     * has opted out of showing their supporter tag, `1` for a Tier 1 supporter, `2` for a Tier 2 supporter, and `3` for
+     * a Tier 3 supporter.
+     */
+    supporter: number;
 }

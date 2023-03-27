@@ -353,6 +353,11 @@ The user object represents an in-game player.
   - `minecraft:the_nether` - The Nether
   - `minecraft:the_end` - The End
 - afk - If the player is AFK
+- alt - If the player is an alt account
+- bot - If the player is a bot
+- supporter - the current public tier of the player's supporter status. This will be `0` if the player is not a
+  supporter or has opted out of showing their supporter tag, `1` for a Tier 1 supporter, `2` for a Tier 2 supporter, and
+  `3` for a Tier 3 supporter.
 
 ### DiscordUser object
 

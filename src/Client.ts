@@ -5,8 +5,8 @@ import WebSocket from "ws";
 import {Capability, FormattingMode, User} from "./types";
 import {Data, Hello, Players, Success, Error, Closing} from "./packets";
 import {
-    ChatboxChatMessage, ChatboxCommand, DiscordChatMessage, IngameChatMessage, Leave, Join, Death, AFKReturn, AFK,
-    ServerRestartCancelled, ServerRestartScheduled, BaseEvent
+    ChatboxChatMessage, ChatboxCommand, DiscordChatMessage, IngameChatMessage, Leave, Join, Death, WorldChange,
+    AFKReturn, AFK, ServerRestartCancelled, ServerRestartScheduled, BaseEvent
 } from "./events";
 import {QueueMessage} from "./types/QueueMessage";
 
@@ -163,6 +163,12 @@ export declare interface Client {
      * @event
      */
     on(event: "death", listener: (death: Death) => void): this;
+
+    /**
+     * The event received when a player changes world.
+     * @event
+     */
+    on(event: "world_change", listener: (worldChange: WorldChange) => void): this;
 
     /**
      * The event received when a player goes AFK in-game.

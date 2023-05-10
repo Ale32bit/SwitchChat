@@ -75,6 +75,7 @@ You are able to listen after the following events, which directly map to the eve
 | Join              | `join`                     | A player joined the server                 |
 | Leave             | `leave`                    | A player left the server                   |
 | Death             | `death`                    | A player died                              |
+| World change      | `world_change`             | A player changed worlds                    |
 | AFK               | `afk`                      | A player went AFK                          |
 | AFK return        | `afk_return`               | A player returned from being AFK           |
 | Restart scheduled | `server_restart_scheduled` | The server will restart soon               |
@@ -166,6 +167,17 @@ The event received when a player dies in-game.
 - renderedText - `RenderedTextObject` of the death message
 - user - `User` that died
 - source - `User` | `null` that killed the user. Only set if they were killed by another player
+
+### World change
+
+([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#world-change-event) &ndash;
+[API reference](https://docs.sc3.io/library/switchchat/interfaces/WorldChange.html))
+
+The event received when a player changes worlds.
+
+- user - `User` that changed worlds
+- origin - `string` of the world the player moved from
+- destination - `string` of the world the player is now in
 
 ### AFK
 

@@ -4,6 +4,7 @@ export * from "./BaseEvent";
 export * from "./ChatboxChatMessage";
 export * from "./ChatboxCommand";
 export * from "./Death";
+export * from "./WorldChange";
 export * from "./DiscordChatMessage";
 export * from "./IngameChatMessage";
 export * from "./Join";

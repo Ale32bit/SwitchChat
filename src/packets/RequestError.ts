@@ -5,7 +5,7 @@ import {Data} from "./Data";
  * 
  * @see https://docs.sc3.io/chatbox/websocket.html#error-packet
  */
-export interface Error extends Data {
+export interface RequestError extends Data {
     id: number | undefined;
 
     /** The type of error that occurred. */

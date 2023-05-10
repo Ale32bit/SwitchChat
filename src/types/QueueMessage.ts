@@ -1,5 +1,5 @@
 import {Success} from "../packets";
-import {Error} from "../packets";
+import {RequestError} from "../packets";
 import {FormattingMode} from "./RenderedTextObject";
 
 /** @internal */

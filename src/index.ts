@@ -4,3 +4,4 @@ export * from "./Client";
 export * from "./events";
 export * from "./packets";
 export * from "./types";
+export * from "./errors";

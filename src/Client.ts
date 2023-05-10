@@ -3,12 +3,13 @@ import * as constants from "./constants";
 import WebSocket from "ws";
 
 import {Capability, FormattingMode, User} from "./types";
-import {Data, Hello, Players, Success, Error, Closing} from "./packets";
+import {Data, Hello, Players, Success, RequestError, Closing} from "./packets";
 import {
     ChatboxChatMessage, ChatboxCommand, DiscordChatMessage, IngameChatMessage, Leave, Join, Death, AFKReturn, AFK,
     ServerRestartCancelled, ServerRestartScheduled, BaseEvent
 } from "./events";
 import {QueueMessage} from "./types/QueueMessage";
+import ChatboxError from "./errors/ChatboxError";
 
 export declare interface Client {
     /**
@@ -111,7 +112,7 @@ export declare interface Client {
 
     on(event: "raw", listener: (rawData: { [key: string]: any }) => void): this;
 
-    on(event: "ws_error", listener: (err: Error) => void): this;
+    on(event: "ws_error", listener: (err: RequestError) => void): this;
 
     // =========================================================================
     // Server events
@@ -210,7 +211,7 @@ export class Client extends events.EventEmitter {
     private readonly _token: string;
     private _ws?: WebSocket;
     private _queueInterval?: NodeJS.Timer;
-    private _queueCounter = 0;
+    private _queueCounter = 1;
 
     constructor(token: string) {
         super();
@@ -344,10 +345,11 @@ export class Client extends events.EventEmitter {
                 break;
 
             case "error":
-                let error = data as Error
+                let error = data as RequestError
                 if (error.id && this._awaitingQueue[error.id]) {
                     let promise = this._awaitingQueue[error.id];
-                    promise.reject(error);
+                    let chatboxError = new ChatboxError(error.message, error.error, error.id);
+                    promise.reject(chatboxError);
                     delete this._awaitingQueue[error.id];
                 }
 

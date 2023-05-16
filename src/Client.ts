@@ -213,11 +213,12 @@ export class Client extends events.EventEmitter {
     private _delay: number = 500;
     private readonly _queue: QueueMessage[] = [];
     private readonly _awaitingQueue: { [key: number]: QueueMessage } = {};
+    private _processingQueue = false;
+    private _queueCounter = 1;
+
 
     private readonly _token: string;
     private _ws?: WebSocket;
-    private _queueInterval?: NodeJS.Timer;
-    private _queueCounter = 1;
 
     constructor(token: string) {
         super();
@@ -238,10 +239,6 @@ export class Client extends events.EventEmitter {
         }
     }
 
-    private initQueueInterval() {
-        this._queueInterval = setInterval(this._processQueue.bind(this), this._delay);
-    }
-
     public say(text: string, name?: string, mode: FormattingMode = this.defaultFormattingMode): Promise<Success> {
         return new Promise((resolve, reject) => {
             name = name ?? this.defaultName;
@@ -257,6 +254,8 @@ export class Client extends events.EventEmitter {
                 resolve: resolve,
                 reject: reject,
             });
+
+            this._processQueue();
         });
     }
 
@@ -276,6 +275,8 @@ export class Client extends events.EventEmitter {
                 resolve: resolve,
                 reject: reject,
             });
+
+            this._processQueue();
         });
     }
 
@@ -283,7 +284,7 @@ export class Client extends events.EventEmitter {
         this._ws = new WebSocket(this.endpoint + this._token);
         this._ws.on("close", (code, reason) => {
             if (this.running) {
-                clearInterval(this._queueInterval);
+                this._processingQueue = false;
                 this.reconnect(true);
             }
         });
@@ -296,10 +297,10 @@ export class Client extends events.EventEmitter {
     }
 
     public close(soft?: boolean) {
-        if(!soft) {
+        if (!soft) {
             this.running = false;
         }
-        clearInterval(this._queueInterval);
+        this._processingQueue = false;
         if (this._ws && (this._ws.readyState === this._ws.OPEN || this._ws.readyState === this._ws.CONNECTING)) {
             this._ws.close();
         }
@@ -312,7 +313,7 @@ export class Client extends events.EventEmitter {
     }
 
     private _onReady() {
-        this.initQueueInterval();
+        this._processQueue();
         this.emit("ready");
     }
 
@@ -374,6 +375,7 @@ export class Client extends events.EventEmitter {
             case "closing":
                 let closing = data as Closing;
                 this.emit("closing", closing);
+                this._processingQueue = false;
                 // server is shutting down, and we need to restart the connection
                 if (closing.closeReason !== "server_stopping") {
                     this.running = false;
@@ -385,11 +387,28 @@ export class Client extends events.EventEmitter {
         this.emit(event.event, event);
     }
 
-    private _processQueue() {
-        const data = this._queue.shift();
-        if (data) {
-            this._ws?.send(JSON.stringify(data.data));
-            this._awaitingQueue[data.data.id] = data;
+    private async _processQueue() {
+        if (this._processingQueue)
+            return;
+
+        this._processingQueue = true;
+        while (this._processingQueue) {
+            const data = this._queue.shift();
+            if (data) {
+                this._ws?.send(JSON.stringify(data.data));
+                this._awaitingQueue[data.data.id] = data;
+
+                await this._sleep(this._delay);
+            } else {
+                break;
+            }
         }
+        this._processingQueue = false;
+    }
+
+    private _sleep(ms?: number | undefined) {
+        return new Promise(resolve => {
+            setTimeout(resolve, ms)
+        })
     }
 }

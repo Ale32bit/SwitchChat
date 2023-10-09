@@ -390,7 +390,7 @@ The Discord user object represents a user on Discord.
 ([Websocket API docs](https://docs.sc3.io/chatbox/websocket.html#raw-json-text-object) &ndash;
 [API reference](https://docs.sc3.io/library/switchchat/interfaces/RenderedTextObject.html))
 
-Minecraft's serialised [raw JSON text format](https://minecraft.fandom.com/wiki/Raw_JSON_text_format). See the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#raw-json-text-object) for more information on how this is used.
+Minecraft's serialised [raw JSON text format](https://minecraft.wiki/w/Raw_JSON_text_format). See the [SwitchCraft documentation](https://docs.sc3.io/chatbox/websocket.html#raw-json-text-object) for more information on how this is used.
 
 ### FormattingMode
 
@@ -399,4 +399,4 @@ Minecraft's serialised [raw JSON text format](https://minecraft.fandom.com/wiki/
 The mode to use for outgoing chatbox messages (`.say()`, `.tell()`).
 
 - markdown - Discord-like [Markdown syntax](https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-). Supports URLs, but not colours.
-- format - Minecraft-like [formatting codes](https://minecraft.fandom.com/wiki/Formatting_codes) using ampersands (e.g. `&e` for yellow). Supports colours, but not URLs.
+- format - Minecraft-like [formatting codes](https://minecraft.wiki/w/Formatting_codes) using ampersands (e.g. `&e` for yellow). Supports colours, but not URLs.

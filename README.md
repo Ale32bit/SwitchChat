@@ -30,28 +30,29 @@ This example will show you how to connect to the SwitchCraft Chatbox API with a 
 
 ```ts
 // Import SwitchChat
-import { Client } from "switchchat";
+import {Client} from "switchchat";
 
 // Create the Chatbox client
-const sc = new Client("YOUR-CHATBOX-TOKEN");
+const sc = new Client("YOUR-CHATBOX-TOKEN", {
+    // Optional - set the default name and markdown formatting mode for all `.say()` and `.tell()` calls
+    defaultName: "Hello World Bot",
+    defaultFormattingMode: "markdown",
+});
 
-// Optional - set the default name and markdown formatting mode for all `.say()` and `.tell()` calls
-sc.defaultName = "Hello World Bot";
-sc.defaultFormattingMode = "markdown";
 
 // Add event listener for when a backslash command is received
 sc.on("command", async (cmd) => {
-  // Only respond if the command is `\helloworld`
-  if (cmd.command === "helloworld") {
-    // Send message back to the user: "Hello World!"
-    await sc.tell(cmd.user.name, "Hello World!");
-  }
+    // Only respond if the command is `\helloworld`
+    if (cmd.command === "helloworld") {
+        // Send message back to the user: "Hello World!"
+        await sc.tell(cmd.user.name, "Hello World!");
+    }
 });
 
 // Event listener for when the client is connected to SwitchCraft and ready to
 // receive messages and events
 sc.on("ready", () => {
-  console.log("Connected!");
+    console.log("Connected!");
 });
 
 // Connect to SwitchCraft
@@ -312,7 +313,7 @@ was sent (`reason` is `"message_sent"`).
 
 | Argument | Type                        | Description                                                                                                                              |
 |----------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| `user`   | `string`                    | The username or UUID of the user to send the message to.                                                                                 |
+| `user`   | `string`, `User`            | The username, UUID or the `User` object of the user to send the message to.                                                              |
 | `text`   | `string`                    | The message to send.                                                                                                                     |
 | `name`   | `string` (optional)         | The name of the chatbox to show. If no name is specified, it will default to the username of the license owner, or `client.defaultName`. |
 | `mode`   | `FormattingMode` (optional) | The formatting mode to use (`"markdown"` or `"format"`). Defaults to `client.defaultFormattingMode` or `"markdown"`.                     |

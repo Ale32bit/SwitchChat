@@ -221,8 +221,8 @@ export class Client extends events.EventEmitter {
     private _ws?: WebSocket;
 
     constructor(token: string, options?: undefined | {
-        defaultName: string,
-        defaultFormattingMode: FormattingMode,
+        defaultName?: string | undefined,
+        defaultFormattingMode?: FormattingMode | undefined,
     }) {
         super();
         this.capabilities = [];

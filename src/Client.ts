@@ -80,7 +80,7 @@ export declare interface Client {
      *
      * @returns A {@link Success} object containing if the message was sent.
      */
-    say(text: string, name?: string, mode?: FormattingMode): Promise<Success>;
+    say(text: string | User, name?: string, mode?: FormattingMode): Promise<Success>;
 
     /**
      * Sends a private message to an in-game player.
@@ -99,7 +99,7 @@ export declare interface Client {
      *
      * @returns A {@link Success} object containing if the message was sent.
      */
-    tell(user: string, text: string, name?: string, mode?: FormattingMode): Promise<Success>;
+    tell(user: string | User, text: string, name?: string, mode?: FormattingMode): Promise<Success>;
 
     /** Emitted when the Chatbox client is ready to send and receive messages. */
     on(event: "ready", listener: () => void): this;
@@ -259,15 +259,22 @@ export class Client extends events.EventEmitter {
         });
     }
 
-    public tell(user: string, text: string, name?: string, mode: FormattingMode = this.defaultFormattingMode): Promise<Success> {
+    public tell(user: string | User, text: string, name?: string, mode: FormattingMode = this.defaultFormattingMode): Promise<Success> {
         return new Promise((resolve, reject) => {
             name = name ?? this.defaultName;
+
+            let playerUsername: string;
+            if (typeof user === "string") {
+                playerUsername = user as string;
+            } else {
+                playerUsername = (user as User).name;
+            }
 
             this._queue.push({
                 data: {
                     id: this._queueCounter++,
                     type: "tell",
-                    user: user,
+                    user: playerUsername,
                     text: text,
                     name: name,
                     mode: mode,

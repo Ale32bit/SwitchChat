@@ -220,7 +220,7 @@ export class Client extends events.EventEmitter {
     private readonly _token: string;
     private _ws?: WebSocket;
 
-    constructor(token: string, options: {
+    constructor(token: string, options?: undefined | {
         defaultName: string,
         defaultFormattingMode: FormattingMode,
     }) {

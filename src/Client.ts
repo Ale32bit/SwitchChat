@@ -229,8 +229,8 @@ export class Client extends events.EventEmitter {
 
         this._token = token;
         if (options) {
-            this.defaultName ??= options.defaultName;
-            this.defaultFormattingMode ??= options.defaultFormattingMode;
+            this.defaultName = options.defaultName ?? this.defaultName;
+            this.defaultFormattingMode = options.defaultFormattingMode ?? this.defaultFormattingMode;
         }
 
         this.on("afk", e => this.updatePlayer(e.user));

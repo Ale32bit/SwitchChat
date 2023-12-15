@@ -220,11 +220,18 @@ export class Client extends events.EventEmitter {
     private readonly _token: string;
     private _ws?: WebSocket;
 
-    constructor(token: string) {
+    constructor(token: string, options: {
+        defaultName: string,
+        defaultFormattingMode: FormattingMode,
+    }) {
         super();
         this.capabilities = [];
 
         this._token = token;
+        if (options) {
+            this.defaultName ??= options.defaultName;
+            this.defaultFormattingMode ??= options.defaultFormattingMode;
+        }
 
         this.on("afk", e => this.updatePlayer(e.user));
         this.on("afk_return", e => this.updatePlayer(e.user));

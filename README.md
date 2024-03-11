@@ -252,6 +252,7 @@ You are also able to listen after these packets that are sent by SwitchCraft to 
 
 - guest - `boolean` that says if you are authenticated with the guest key
 - licenseOwner - `string` that represents who owns the chatbox license
+- licenseOwnerUser - `User` that represents who owns the chatbox license, or null if this is a guest connection
 - capabilities - Array of `string`s that can tell you what capabilities you have
 
 ### Players packet
